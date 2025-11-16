@@ -125,10 +125,134 @@ body {
 /* Hero */
 .hero {
   padding: 64px 0 40px;
+  position: relative;
+  overflow: hidden;
+  min-height: 500px;
+  display: flex;
+  align-items: center;
 }
+
+/* Hero Background */
+.hero-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  z-index: 0;
+}
+
+/* Geometric Grid */
+.geometric-grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    linear-gradient(to right, var(--border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--border) 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: 0.3;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black 0%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black 0%, transparent 100%);
+}
+
+/* Geometric Shapes */
+.geometric-shape {
+  position: absolute;
+  border-radius: 12px;
+  opacity: 0.08;
+  filter: blur(2px);
+}
+
+.shape-1 {
+  width: 300px;
+  height: 300px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  top: -100px;
+  right: -50px;
+  border-radius: 50%;
+  animation: float 20s ease-in-out infinite;
+}
+
+.shape-2 {
+  width: 200px;
+  height: 200px;
+  background: linear-gradient(225deg, var(--accent), var(--primary));
+  bottom: -50px;
+  left: -30px;
+  transform: rotate(45deg);
+  animation: float 25s ease-in-out infinite reverse;
+}
+
+.shape-3 {
+  width: 150px;
+  height: 150px;
+  background: var(--primary);
+  top: 40%;
+  right: 10%;
+  border-radius: 50%;
+  animation: float 18s ease-in-out infinite;
+  animation-delay: -5s;
+}
+
+.shape-4 {
+  width: 180px;
+  height: 180px;
+  background: linear-gradient(45deg, var(--primary), transparent);
+  top: 20%;
+  left: 15%;
+  transform: rotate(30deg);
+  animation: rotate 30s linear infinite;
+}
+
+.shape-5 {
+  width: 120px;
+  height: 120px;
+  background: var(--accent);
+  bottom: 30%;
+  right: 25%;
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  animation: float 22s ease-in-out infinite;
+  animation-delay: -10s;
+}
+
+/* Animations */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+  }
+  33% {
+    transform: translateY(-20px) translateX(10px);
+  }
+  66% {
+    transform: translateY(10px) translateX(-10px);
+  }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Hero Content */
+.hero-content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+
 .hero .kicker {
   color: var(--muted);
   margin: 0 0 4px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
 }
 .hero .title {
   font-size: clamp(32px, 6vw, 56px);
@@ -140,10 +264,13 @@ body {
   color: var(--muted);
   max-width: 720px;
   margin: 0 0 20px;
+  font-size: clamp(16px, 2vw, 18px);
+  line-height: 1.6;
 }
 .hero-actions {
   display: flex;
   gap: 12px;
+  margin-top: 28px;
 }
 
 /* Sections */
@@ -445,6 +572,53 @@ body {
   gap: 12px;
   justify-content: center;
   margin: 24px 0 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .hero {
+    min-height: 400px;
+  }
+
+  .geometric-shape {
+    opacity: 0.05;
+  }
+
+  .shape-1 {
+    width: 200px;
+    height: 200px;
+  }
+
+  .shape-2 {
+    width: 150px;
+    height: 150px;
+  }
+
+  .shape-3 {
+    width: 100px;
+    height: 100px;
+  }
+
+  .shape-4 {
+    width: 120px;
+    height: 120px;
+  }
+
+  .shape-5 {
+    width: 80px;
+    height: 80px;
+  }
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .geometric-shape {
+    animation: none;
+  }
+
+  .hero-background {
+    display: none;
+  }
 }
 
 /* Footer */
