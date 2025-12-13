@@ -22,6 +22,7 @@
             <a href="#" class="dropdown-toggle">취미생활</a>
             <ul class="dropdown-menu">
               <li><a href="#" class="dropdown-item" data-action="interactive-story-navigator">interactive story navigator</a></li>
+              <li><a href="#" class="dropdown-item" data-action="picture-puzzle-game">그림퍼즐맞추기</a></li>
             </ul>
           </li>
           <li><a href="#contact">연락처</a></li>
@@ -98,6 +99,14 @@
     <footer class="site-footer">
       <p>© <span id="year"></span> JH Kim. 모두의 더 좋은 웹을 위해.</p>
     </footer>
+
+    <!-- Game Modal (범용 모달) -->
+    <div id="game-modal" class="modal-overlay hidden">
+      <div class="modal-container">
+        <button id="close-game-modal" class="modal-close-btn" aria-label="닫기">✕</button>
+        <iframe id="game-iframe" src="" frameborder="0"></iframe>
+      </div>
+    </div>
 
     <script src="./script.js"></script>
     <script type="module">

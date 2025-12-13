@@ -334,4 +334,69 @@ body {
   padding: 22px 16px 40px;
 }
 
+/* Interactive Navigator Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(4px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+.modal-overlay.hidden {
+  display: none;
+}
+.modal-container {
+  position: relative;
+  width: 95%;
+  height: 95%;
+  max-width: 1400px;
+  max-height: 900px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.modal-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: color-mix(in oklab, var(--card) 90%, transparent);
+  color: var(--text);
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  z-index: 10001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, transform 0.2s ease;
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+}
+.modal-close-btn:hover {
+  background: color-mix(in oklab, var(--card) 70%, transparent);
+  transform: scale(1.1);
+}
+#game-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  flex: 1;
+}
+
 

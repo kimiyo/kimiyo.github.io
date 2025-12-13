@@ -56,16 +56,70 @@
 
   // Dropdown menu item click handler
   const dropdownItems = document.querySelectorAll('.dropdown-item[data-action]');
+  const modal = document.getElementById('game-modal');
+  const gameIframe = document.getElementById('game-iframe');
+  const closeModalBtn = document.getElementById('close-game-modal');
+  
+  // 게임 URL 매핑
+  const gameUrls = {
+    'interactive-story-navigator': 'interative_navigator/interactive_navigator.html',
+    'picture-puzzle-game': 'picture_puzzle_game/picture_puzzle_game.html'
+  };
+  
   dropdownItems.forEach(item => {
     item.addEventListener('click', (e) => {
       e.preventDefault();
       const action = item.getAttribute('data-action');
-      if (action === 'interactive-story-navigator') {
-        // To be implemented
-        console.log('interactive story navigator - to be implemented');
-        alert('interactive story navigator - to be implemented');
+      const gameUrl = gameUrls[action];
+      
+      if (gameUrl && modal && gameIframe) {
+        // iframe에 게임 URL 로드
+        gameIframe.src = gameUrl;
+        // 모달 열기
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden'; // 배경 스크롤 방지
       }
     });
+  });
+
+  // 모달 닫기 버튼
+  if (closeModalBtn) {
+    closeModalBtn.addEventListener('click', () => {
+      if (modal) {
+        modal.classList.add('hidden');
+        document.body.style.overflow = ''; // 스크롤 복원
+        // iframe 내용 초기화 (선택사항)
+        if (gameIframe) {
+          gameIframe.src = '';
+        }
+      }
+    });
+  }
+
+  // 모달 배경 클릭 시 닫기
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.classList.add('hidden');
+        document.body.style.overflow = ''; // 스크롤 복원
+        // iframe 내용 초기화 (선택사항)
+        if (gameIframe) {
+          gameIframe.src = '';
+        }
+      }
+    });
+  }
+
+  // ESC 키로 모달 닫기
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
+      modal.classList.add('hidden');
+      document.body.style.overflow = ''; // 스크롤 복원
+      // iframe 내용 초기화 (선택사항)
+      if (gameIframe) {
+        gameIframe.src = '';
+      }
+    }
   });
 })();
 

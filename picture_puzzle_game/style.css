@@ -1,0 +1,123 @@
+:root {
+    --board-size: 400px;
+    --tile-size: 100px;
+    --bg-color: #f0f4f8;
+    --primary-color: #4a90e2;
+    --text-color: #333;
+}
+
+body {
+    font-family: 'Jua', sans-serif;
+    background-color: var(--bg-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+    color: var(--text-color);
+    overflow: hidden;
+    /* Prevent scrolling while dragging */
+}
+
+.main-container {
+    text-align: center;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+h1 {
+    margin: 1rem 0;
+    color: var(--primary-color);
+    z-index: 10;
+}
+
+.game-area {
+    position: relative;
+    width: 800px;
+    /* Wider area to allow scattering */
+    height: 600px;
+    background-color: #e0e7ef;
+    border-radius: 20px;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.puzzle-board {
+    width: var(--board-size);
+    height: var(--board-size);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    background-color: rgba(255, 255, 255, 0.5);
+    border: 2px dashed var(--primary-color);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 1;
+    /* Board is below pieces */
+}
+
+.drop-zone {
+    width: var(--tile-size);
+    height: var(--tile-size);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+}
+
+.piece {
+    width: var(--tile-size);
+    height: var(--tile-size);
+    position: absolute;
+    background-image: url('images/Main_Yard_Scene.png');
+    background-size: var(--board-size) var(--board-size);
+    cursor: grab;
+    z-index: 10;
+    /* Pieces are above board */
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    transition: transform 0.1s;
+}
+
+.piece:active {
+    cursor: grabbing;
+    transform: scale(1.05);
+    z-index: 100;
+    /* Dragged piece is on top of everything */
+    box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.4);
+}
+
+.controls {
+    margin-top: 1rem;
+    z-index: 10;
+}
+
+.btn {
+    padding: 10px 20px;
+    font-size: 1.2rem;
+    font-family: 'Jua', sans-serif;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn:hover {
+    background-color: #357abd;
+}
+
+.message {
+    margin-top: 1rem;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #2ecc71;
+    min-height: 2rem;
+    z-index: 10;
+}
