@@ -1,0 +1,52 @@
+{
+  "storyId": "story-1765285999776",
+  "title": "멍멍이의 하루",
+  "mainImage": "static/images/Main_Yard_Scene.png",
+  "imageSize": {
+    "width": 2816,
+    "height": 1536
+  },
+  "episodes": [
+    {
+      "id": "ep1",
+      "name": "맛있는점심",
+      "episodeImage": "static/images/episode_1_delicious_lunch.png",
+      "entryRegion": {
+        "shape": "rect",
+        "coords": {
+          "x": 627,
+          "y": 936,
+          "width": 481,
+          "height": 399
+        }
+      }
+    },
+    {
+      "id": "ep2",
+      "name": " 달콤한 낮잠",
+      "episodeImage": "static/images/episode_3_sweet_nap_time.png",
+      "entryRegion": {
+        "shape": "circle",
+        "coords": {
+          "cx": 2227,
+          "cy": 515,
+          "r": 206
+        }
+      }
+    },
+    {
+      "id": "ep3",
+      "name": "신나는공놀이",
+      "episodeImage": "static/images/episode_2_full_ball_play.png",
+      "entryRegion": {
+        "shape": "ellipse",
+        "coords": {
+          "cx": 2077,
+          "cy": 1066,
+          "rx": 190,
+          "ry": 111
+        }
+      }
+    }
+  ]
+}

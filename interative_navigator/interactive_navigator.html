@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Adventure Story</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div id="game-container">
+        <!-- Dashboard View -->
+        <div id="dashboard-view">
+            <header class="dashboard-header">
+                <h1>나만의 인터랙티브 동화</h1>
+                <div class="action-buttons">
+                    <button id="import-button" class="primary-button">📂 Import</button>
+                    <button id="new-button" class="secondary-button" disabled title="준비 중">➕ New</button>
+                    <input type="file" id="file-input" accept=".json" class="hidden">
+                </div>
+            </header>
+            <div id="story-list" class="story-grid">
+                <!-- Story Cards will be injected here -->
+                <div class="empty-state">
+                    <p>등록된 이야기가 없습니다.<br>Import 버튼을 눌러 이야기를 추가해보세요.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Authoring View -->
+        <div id="authoring-view" class="hidden">
+            <header class="author-header">
+                <div class="header-left">
+                    <button id="author-back-btn" class="secondary-button">← 나가기</button>
+                    <input type="text" id="author-story-title-input" class="title-input" placeholder="스토리 제목 입력">
+                </div>
+                <div class="header-center">
+                    <button id="btn-new-episode" class="primary-button hidden">+ New Episode</button>
+                </div>
+                <div class="header-right">
+                    <button id="author-save-story-btn" class="primary-button">💾 스토리 저장</button>
+                </div>
+            </header>
+            <div class="author-body">
+                <!-- Toolbar (Hidden by default) -->
+                <aside id="author-toolbar" class="toolbar hidden">
+                    <div class="tool-label">Tools</div>
+                    <button class="tool-btn active" data-tool="rect" title="사각형 그리기">
+                        ⬜
+                    </button>
+                    <button class="tool-btn" data-tool="circle" title="원 그리기">⚪</button>
+                    <button class="tool-btn" data-tool="ellipse" title="타원 그리기">🥚</button>
+                    <button class="tool-btn" data-tool="path" title="자유 영역 그리기">✏️</button>
+                    <button class="tool-btn" data-tool="brush" title="점 추가 (Path 편집)">
+                        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Path 선분 -->
+                            <path d="M2 18 L8 8 L14 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.5"/>
+                            <!-- 앵커 포인트 (마름모) -->
+                            <rect x="5" y="5" width="6" height="6" rx="1" transform="rotate(45 8 8)" fill="currentColor"/>
+                            <!-- 플러스 기호 (초록색 배지) -->
+                            <circle cx="16" cy="16" r="5" fill="#4cd964"/>
+                            <line x1="16" y1="13.5" x2="16" y2="18.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+                            <line x1="13.5" y1="16" x2="18.5" y2="16" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                    <button class="tool-btn" data-tool="eraser" title="점 삭제 (Path 편집)">
+                        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Path 선분 -->
+                            <path d="M2 18 L8 8 L14 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.5"/>
+                            <!-- 앵커 포인트 (마름모) -->
+                            <rect x="5" y="5" width="6" height="6" rx="1" transform="rotate(45 8 8)" fill="currentColor"/>
+                            <!-- 마이너스 기호 (빨간색 배지) -->
+                            <circle cx="16" cy="16" r="5" fill="#ff3b30"/>
+                            <line x1="13.5" y1="16" x2="18.5" y2="16" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                </aside>
+
+                <!-- Canvas Area -->
+                <main class="canvas-area">
+                    <div id="author-canvas-container">
+                        <div id="empty-canvas-state" class="empty-state-overlay">
+                            <p>이미지가 없습니다.<br>클릭하여 배경 이미지를 업로드하세요.</p>
+                            <input type="file" id="author-img-upload" accept="image/*" class="hidden">
+                        </div>
+                        <img id="author-main-image" src="" class="hidden">
+
+                        <!-- Drawing Layer (SVG for lines/polygons, Divs for Rects) -->
+                        <div id="drawing-layer"></div>
+
+                        <!-- Temporary Rubber Band for drawing -->
+                        <div id="rubber-band" class="hidden"></div>
+                    </div>
+                </main>
+
+                <!-- Properties Panel (Hidden by default) -->
+                <aside id="author-properties" class="properties-panel hidden">
+                    <h3>에피소드 속성</h3>
+                    <div class="prop-form">
+                        <label>에피소드 이름</label>
+                        <input type="text" id="ep-name" placeholder="예: 맛있는 점심">
+
+                        <label>에피소드 ID</label>
+                        <input type="text" id="ep-id" placeholder="예: ep1" readonly>
+
+                        <label>에피소드 이미지</label>
+                        <div class="ep-img-preview" id="ep-img-preview-box">
+                            <span>이미지 업로드</span>
+                            <img id="ep-img-preview" class="hidden">
+                        </div>
+                        <input type="file" id="ep-img-upload" accept="image/*" class="hidden">
+
+                        <label>진입 영역 (Auto)</label>
+                        <input type="text" id="ep-region-coords" readonly placeholder="영역을 그리면 자동 입력">
+                    </div>
+
+                    <div class="panel-actions">
+                        <button id="btn-edit-episode" class="primary-button full-width hidden">✏️ Edit Episode</button>
+                        <!-- New -->
+                        <button id="btn-save-episode" class="primary-button full-width hidden">💾 Save Episode</button>
+                        <button id="btn-delete-episode" class="danger-button full-width hidden">🗑️ Delete</button>
+                        <!-- New -->
+                        <button id="btn-cancel-episode" class="secondary-button full-width">Cancel</button>
+                    </div>
+                </aside>
+            </div>
+        </div>
+
+        <!-- Main View -->
+        <div id="main-view" class="hidden">
+            <button id="exit-button" class="utility-button">🚪 나가기</button>
+            <div id="main-image-container">
+                <img id="main-image" src="" alt="Main Scene">
+                <!-- Overlay regions will be injected here -->
+            </div>
+        </div>
+
+        <!-- Episode View -->
+        <div id="episode-view" class="hidden">
+            <button id="back-button">← 메인으로 돌아가기</button>
+            <div id="episode-image-container">
+                <img id="episode-image" src="" alt="Episode Scene">
+            </div>
+        </div>
+    </div>
+    <script src="common.js"></script>
+    <script src="play.js"></script>
+    <script src="authoring.js"></script>
+    <script src="main.js"></script>
+</body>
+
+</html>

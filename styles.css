@@ -67,11 +67,11 @@ body {
 .site-header {
   position: sticky;
   top: 0;
-  z-index: 20;
+  z-index: 1000;
   background: color-mix(in oklab, var(--card) 75%, transparent);
   backdrop-filter: saturate(110%) blur(4px);
   border-bottom: 1px solid var(--border);
-  overflow: hidden; /* 한지 텍스처 canvas를 위한 공간 */
+  overflow: visible; /* 드롭다운 메뉴가 보이도록 */
 }
 
 /* 한지 텍스처를 위한 header 내부 canvas */
@@ -85,10 +85,11 @@ body {
   z-index: -1;
   opacity: 0.6;
   pointer-events: none;
+  overflow: hidden; /* 한지 텍스처만 header 내부에 제한 */
 }
 .nav {
   position: relative;
-  z-index: 1; /* 한지 텍스처 위에 표시 */
+  z-index: 1001; /* 한지 텍스처 위에 표시 */
   max-width: 1040px;
   margin: 0 auto;
   padding: 14px 20px;
@@ -119,6 +120,51 @@ body {
   color: var(--text);
   background: color-mix(in oklab, var(--card) 70%, transparent);
 }
+
+/* Dropdown menu */
+.nav-links .dropdown {
+  position: relative;
+}
+.nav-links .dropdown-toggle {
+  cursor: pointer;
+}
+.nav-links .dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 8px;
+  min-width: 200px;
+  background: color-mix(in oklab, var(--card) 95%, transparent);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  list-style: none;
+  padding: 8px 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+  z-index: 1002; /* 다른 요소들 위에 표시되도록 */
+  backdrop-filter: blur(8px);
+}
+.nav-links .dropdown:hover .dropdown-menu,
+.nav-links .dropdown:focus-within .dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+.nav-links .dropdown-menu .dropdown-item {
+  display: block;
+  padding: 10px 16px;
+  color: var(--muted);
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.nav-links .dropdown-menu .dropdown-item:hover {
+  background: color-mix(in oklab, var(--card) 70%, transparent);
+  color: var(--text);
+}
+
 .theme-toggle {
   margin-left: auto;
   background: transparent;

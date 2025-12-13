@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>멍멍이의 하루</title>
+    <style>
+        /* Reset & Base */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body,
+        html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a2e;
+        }
+
+        /* Game Container */
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        }
+
+        /* Image Containers */
+        #main-image-container,
+        #episode-image-container {
+            position: relative;
+            display: inline-block;
+            line-height: 0;
+        }
+
+        #main-view img,
+        #episode-view img {
+            max-width: 100vw;
+            max-height: 100vh;
+            width: auto;
+            height: auto;
+            display: block;
+            user-select: none;
+            -webkit-user-drag: none;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Click Regions */
+        .click-region {
+            position: absolute;
+            cursor: pointer;
+            background-color: rgba(255, 255, 255, 0.0);
+            border: 3px solid rgba(255, 255, 255, 0.0);
+            transition: all 0.3s ease;
+            z-index: 10;
+            box-sizing: border-box;
+        }
+
+        .click-region:hover {
+            background-color: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.6),
+                        0 0 40px rgba(255, 255, 255, 0.3);
+            transform: scale(1.03);
+        }
+
+        /* Visibility */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Buttons */
+        .utility-button {
+            position: absolute;
+            z-index: 100;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: bold;
+            background-color: rgba(255, 255, 255, 0.95);
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .utility-button:hover {
+            background-color: #4a90e2;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
+        }
+
+        #back-button {
+            top: 20px;
+            left: 20px;
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+
+        #back-button:hover {
+            background-color: #4cd964;
+            color: white;
+        }
+
+        /* Title Overlay */
+        .title-overlay {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 10px 30px;
+            border-radius: 25px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            z-index: 50;
+            backdrop-filter: blur(10px);
+            white-space: nowrap;
+        }
+
+        /* Episode Name Tooltip */
+        .click-region::after {
+            content: attr(title);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-8px);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .click-region:hover::after {
+            opacity: 1;
+        }
+
+        /* Loading Animation */
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Fade Animation */
+        #main-view,
+        #episode-view {
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Instructions */
+        .instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            color: rgba(255, 255, 255, 0.8);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            z-index: 50;
+            backdrop-filter: blur(5px);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="game-container">
+        <!-- Main View -->
+        <div id="main-view">
+            <div class="title-overlay" id="story-title">멍멍이의 하루</div>
+            <div id="main-image-container">
+                <img id="main-image" src="" alt="Main Scene">
+            </div>
+            <div class="instructions">✨ 그림을 클릭하여 이야기를 탐험해보세요!</div>
+        </div>
+
+        <!-- Episode View -->
+        <div id="episode-view" class="hidden">
+            <button id="back-button" class="utility-button">← 메인으로 돌아가기</button>
+            <div id="episode-image-container">
+                <img id="episode-image" src="" alt="Episode Scene">
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loading" class="loading hidden">로딩 중</div>
+    </div>
+
+    <script>
+        // ============================================================
+        // Story Data (Embedded)
+        // ============================================================
+        // 
+        // 📌 좌표 편집 가이드:
+        // - 모든 좌표는 픽셀(px) 단위입니다.
+        // - imageSize는 mainImage의 원본 크기입니다.
+        // - 좌표를 수정하려면 이미지를 편집기(예: 그림판, Photoshop)에서 열고
+        //   원하는 위치의 픽셀 좌표를 확인하여 입력하세요.
+        //
+        // 도형별 좌표 설명:
+        // - rect: x, y (좌상단), width, height (크기)
+        // - circle: cx, cy (중심), r (반지름)
+        // - ellipse: cx, cy (중심), rx (가로 반지름), ry (세로 반지름)
+        // - polygon/path: points 배열 [{x, y}, ...]
+        //
+        const storyData = {
+            "storyId": "story-1765280684952",
+            "title": "멍멍이의 하루",
+            "mainImage": "static/images/Main_Yard_Scene.png",
+            "imageSize": {
+                "width": 1024,   // 메인 이미지의 원본 가로 크기 (px)
+                "height": 1024  // 메인 이미지의 원본 세로 크기 (px)
+            },
+            "episodes": [
+                {
+                    "id": "ep1",
+                    "name": "맛있는 점심",
+                    "episodeImage": "static/images/episode_1_delicious_lunch.png",
+                    "entryRegion": {
+                        "shape": "circle",
+                        "coords": {
+                            "cx": 333,    // 중심 X 좌표 (px)
+                            "cy": 772,    // 중심 Y 좌표 (px)
+                            "r": 161      // 반지름 (px)
+                        }
+                    }
+                },
+                {
+                    "id": "ep2",
+                    "name": "신나는 공놀이",
+                    "episodeImage": "static/images/episode_2_full_ball_play.png",
+                    "entryRegion": {
+                        "shape": "rect",
+                        "coords": {
+                            "x": 649,       // 좌상단 X 좌표 (px)
+                            "y": 622,       // 좌상단 Y 좌표 (px)
+                            "width": 178,   // 가로 크기 (px)
+                            "height": 330   // 세로 크기 (px)
+                        }
+                    }
+                },
+                {
+                    "id": "ep3",
+                    "name": "달콤한 낮잠",
+                    "episodeImage": "static/images/episode_3_sweet_nap_time.png",
+                    "entryRegion": {
+                        "shape": "ellipse",
+                        "coords": {
+                            "cx": 809,    // 중심 X 좌표 (px)
+                            "cy": 345,    // 중심 Y 좌표 (px)
+                            "rx": 81,     // 가로 반지름 (px)
+                            "ry": 83      // 세로 반지름 (px)
+                        }
+                    }
+                }
+            ]
+        };
+
+        // ============================================================
+        // Player Logic
+        // ============================================================
+        
+        // DOM Elements
+        const mainView = document.getElementById('main-view');
+        const episodeView = document.getElementById('episode-view');
+        const mainImage = document.getElementById('main-image');
+        const mainImageContainer = document.getElementById('main-image-container');
+        const episodeImage = document.getElementById('episode-image');
+        const backButton = document.getElementById('back-button');
+        const storyTitle = document.getElementById('story-title');
+        const loading = document.getElementById('loading');
+
+        // Initialize
+        function init() {
+            // Set title
+            if (storyTitle && storyData.title) {
+                storyTitle.textContent = storyData.title;
+                document.title = storyData.title;
+            }
+
+            // Event Listeners
+            backButton.addEventListener('click', showMainView);
+            window.addEventListener('resize', renderOverlayRegions);
+            mainImage.addEventListener('load', () => {
+                loading.classList.add('hidden');
+                renderOverlayRegions();
+            });
+
+            // Load main image
+            loading.classList.remove('hidden');
+            mainImage.src = storyData.mainImage;
+
+            // Handle image load error
+            mainImage.onerror = () => {
+                loading.classList.add('hidden');
+                alert('메인 이미지를 불러올 수 없습니다.\n이미지 파일 경로를 확인해주세요.');
+            };
+        }
+
+        // Show Main View
+        function showMainView() {
+            mainView.classList.remove('hidden');
+            episodeView.classList.add('hidden');
+            setTimeout(renderOverlayRegions, 50);
+        }
+
+        // Show Episode View
+        function showEpisodeView(episode) {
+            episodeImage.src = episode.episodeImage;
+            mainView.classList.add('hidden');
+            episodeView.classList.remove('hidden');
+
+            // Handle episode image load error
+            episodeImage.onerror = () => {
+                alert(`에피소드 이미지를 불러올 수 없습니다.\n(${episode.name})`);
+                showMainView();
+            };
+        }
+
+        // Render Click Regions
+        // 픽셀 좌표를 퍼센트로 변환하여 렌더링
+        function renderOverlayRegions() {
+            if (!storyData || !mainImageContainer) return;
+
+            // Clear existing regions
+            const existingRegions = mainImageContainer.querySelectorAll('.click-region');
+            existingRegions.forEach(el => el.remove());
+
+            // 이미지 원본 크기 (좌표 기준)
+            const imgW = storyData.imageSize?.width || 1024;
+            const imgH = storyData.imageSize?.height || 1024;
+
+            // 헬퍼 함수: 픽셀 좌표를 퍼센트로 변환
+            const toPercentX = (px) => (px / imgW) * 100;
+            const toPercentY = (px) => (px / imgH) * 100;
+
+            storyData.episodes.forEach(ep => {
+                if (!ep.entryRegion || !ep.entryRegion.coords) return;
+
+                const region = document.createElement('div');
+                region.className = 'click-region';
+                region.title = ep.name;
+
+                const shape = ep.entryRegion.shape;
+                const coords = ep.entryRegion.coords;
+
+                if (shape === 'rect') {
+                    // rect: x, y, width, height (모두 px)
+                    region.style.left = `${toPercentX(coords.x)}%`;
+                    region.style.top = `${toPercentY(coords.y)}%`;
+                    region.style.width = `${toPercentX(coords.width)}%`;
+                    region.style.height = `${toPercentY(coords.height)}%`;
+                }
+                else if (shape === 'circle') {
+                    // circle: cx, cy, r (모두 px)
+                    // 원을 유지하기 위해 r을 양쪽 축에 동일하게 적용
+                    const rPercentX = toPercentX(coords.r);
+                    const rPercentY = toPercentY(coords.r);
+                    
+                    region.style.left = `${toPercentX(coords.cx) - rPercentX}%`;
+                    region.style.top = `${toPercentY(coords.cy) - rPercentY}%`;
+                    region.style.width = `${rPercentX * 2}%`;
+                    region.style.height = `${rPercentY * 2}%`;
+                    region.style.borderRadius = '50%';
+                }
+                else if (shape === 'ellipse') {
+                    // ellipse: cx, cy, rx, ry (모두 px)
+                    const rxPercent = toPercentX(coords.rx);
+                    const ryPercent = toPercentY(coords.ry);
+                    
+                    region.style.left = `${toPercentX(coords.cx) - rxPercent}%`;
+                    region.style.top = `${toPercentY(coords.cy) - ryPercent}%`;
+                    region.style.width = `${rxPercent * 2}%`;
+                    region.style.height = `${ryPercent * 2}%`;
+                    region.style.borderRadius = '50%';
+                }
+                else if (shape === 'polygon' || shape === 'path') {
+                    // polygon/path: points 배열 (각 점은 px)
+                    region.style.left = '0';
+                    region.style.top = '0';
+                    region.style.width = '100%';
+                    region.style.height = '100%';
+
+                    let pointsStr = "";
+                    const points = coords.points || coords;
+                    
+                    if (Array.isArray(points)) {
+                        pointsStr = points.map(p => {
+                            const px = Array.isArray(p) ? p[0] : p.x;
+                            const py = Array.isArray(p) ? p[1] : p.y;
+                            return `${toPercentX(px)}% ${toPercentY(py)}%`;
+                        }).join(', ');
+                    }
+
+                    if (pointsStr) {
+                        region.style.clipPath = `polygon(${pointsStr})`;
+                    }
+                }
+
+                region.addEventListener('click', () => {
+                    showEpisodeView(ep);
+                });
+
+                mainImageContainer.appendChild(region);
+            });
+        }
+
+        // Start when DOM is ready
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+
+</html>
+

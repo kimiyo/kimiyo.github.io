@@ -53,6 +53,20 @@
       if (mode === 'system') applyTheme('system');
     });
   }
+
+  // Dropdown menu item click handler
+  const dropdownItems = document.querySelectorAll('.dropdown-item[data-action]');
+  dropdownItems.forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
+      const action = item.getAttribute('data-action');
+      if (action === 'interactive-story-navigator') {
+        // To be implemented
+        console.log('interactive story navigator - to be implemented');
+        alert('interactive story navigator - to be implemented');
+      }
+    });
+  });
 })();
 
 
