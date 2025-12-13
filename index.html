@@ -89,9 +89,108 @@
     <script type="module">
       import { Hanji } from './scriptHanji.js';
       
+      // 한지 배경 설정
+      const lightConfig = {
+        baseColor: { r: 245, g: 240, b: 230 }, // 밝은 미색
+        fiberColor: { r: 140, g: 120, b: 100 }, // 자연스러운 지푸라기 색
+        paperRoughness: 25,
+        fiberDensity: 1.2,
+        backgroundGradient: null,
+        candle: null,
+        backlight: null
+      };
+
+      const darkConfig = {
+        baseColor: { r: 35, g: 30, b: 25 }, // 어두운 배경
+        fiberColor: { r: 180, g: 150, b: 120 }, // 어둠 속에서 빛나는 섬유
+        paperRoughness: 15,
+        backgroundGradient: 'radial-gradient(circle at 25% 50%, #8e562a 0%, #442a0e 60%, #1a1510 100%)',
+        candle: {
+          src: 'assets/candle.svg',
+          x: 0.25, // 왼쪽에서 25% 위치
+          y: 0.5,  // 위에서 50% 위치
+          width: '200px',
+          blur: 4, // 촛불 흐림 효과
+          opacity: 1.0
+        },
+        backlight: {
+          x: 0.25, // 촛불 위치와 일치
+          y: 0.5,
+          radius: 1600,
+          minAlpha: 0.1
+        }
+      };
+
+      // 테마 변경 감지 및 한지 배경 업데이트
+      const getCurrentTheme = () => {
+        const theme = document.documentElement.getAttribute('data-theme');
+        if (theme === 'dark') return 'dark';
+        if (theme === 'light') return 'light';
+        // system 모드일 경우 시스템 설정 확인
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      };
+
       // 한지 배경 초기화
-      const hanjiBackground = new Hanji();
-      hanjiBackground.start();
+      const hanji = new Hanji(document.body, lightConfig);
+      hanji.start();
+
+      // Header에 한지 텍스처 추가
+      let headerHanji = null;
+      const header = document.querySelector('.site-header');
+      if (header) {
+        headerHanji = new Hanji(header, {
+          ...lightConfig,
+          paperRoughness: 20,
+          fiberDensity: 0.8,
+          animationSpeed: 0.0003, // header는 조금 더 느리게
+          backgroundGradient: null,
+          candle: null,
+          backlight: null
+        });
+        headerHanji.start();
+      }
+
+      const updateHanjiTheme = () => {
+        const theme = getCurrentTheme();
+        hanji.updateConfig(theme === 'dark' ? darkConfig : lightConfig);
+        
+        // Header 한지도 업데이트
+        if (headerHanji) {
+          headerHanji.updateConfig(theme === 'dark' ? {
+            ...darkConfig,
+            paperRoughness: 12,
+            fiberDensity: 0.6,
+            backgroundGradient: null, // header에는 그라디언트 없음
+            candle: null, // header에는 촛불 없음
+            backlight: null // header에는 백라이트 없음
+          } : {
+            ...lightConfig,
+            paperRoughness: 20,
+            fiberDensity: 0.8
+          });
+        }
+      };
+
+      // 초기 테마 적용
+      updateHanjiTheme();
+
+      // 테마 변경 감지 (MutationObserver 사용)
+      const observer = new MutationObserver(() => {
+        updateHanjiTheme();
+      });
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-theme']
+      });
+
+      // 시스템 테마 변경 감지 (system 모드일 때)
+      if (window.matchMedia) {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+          if (document.documentElement.getAttribute('data-theme') === 'system') {
+            updateHanjiTheme();
+          }
+        });
+      }
     </script>
   </body>
   </html>
