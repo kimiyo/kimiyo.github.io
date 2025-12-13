@@ -74,8 +74,8 @@ h1 {
     width: var(--tile-size);
     height: var(--tile-size);
     position: absolute;
-    background-image: url('images/Main_Yard_Scene.png');
     background-size: var(--board-size) var(--board-size);
+    background-repeat: no-repeat;
     cursor: grab;
     z-index: 10;
     /* Pieces are above board */
@@ -92,9 +92,44 @@ h1 {
     box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.4);
 }
 
+.image-selector {
+    margin: 1rem 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.image-selector label {
+    font-size: 1.1rem;
+    color: var(--text-color);
+}
+
+.image-select {
+    padding: 8px 12px;
+    font-size: 1rem;
+    font-family: 'Jua', sans-serif;
+    border: 2px solid var(--primary-color);
+    border-radius: 8px;
+    background-color: white;
+    color: var(--text-color);
+    cursor: pointer;
+}
+
+.image-select:focus {
+    outline: none;
+    border-color: #357abd;
+}
+
 .controls {
     margin-top: 1rem;
     z-index: 10;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
 }
 
 .btn {

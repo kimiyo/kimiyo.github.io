@@ -2,19 +2,50 @@ const gameArea = document.getElementById('game-area');
 const board = document.getElementById('board');
 const resetBtn = document.getElementById('reset-btn');
 const messageEl = document.getElementById('message');
+const changeImageBtn = document.getElementById('change-image-btn');
+const controls = document.getElementById('controls');
 
 const ROWS = 4;
 const COLS = 4;
 const TILE_SIZE = 100; // px
 const BOARD_SIZE = 400; // px
 
+// 사용 가능한 이미지 목록
+const availableImages = [
+    'images/Main_Yard_Scene.png',
+    'images/episode_1_delicious_lunch.png',
+    'images/episode_2_full_ball_play.png',
+    'images/episode_3_sweet_nap_time.png'
+];
+
 let pieces = [];
 let dropZones = [];
+let currentImage = '';
 
-function initGame() {
-    createBoard();
-    createPieces();
-    scatterPieces();
+function initGame(imagePath) {
+    currentImage = imagePath;
+    
+    // DOM이 업데이트될 시간을 주기 위해 약간의 지연
+    setTimeout(() => {
+        createBoard();
+        createPieces(imagePath);
+        scatterPieces();
+    }, 10);
+}
+
+function changeToRandomImage() {
+    // 랜덤 이미지 선택
+    const randomIndex = Math.floor(Math.random() * availableImages.length);
+    const randomImage = availableImages[randomIndex];
+    
+    // 기존 퍼즐 조각 제거
+    const existingPieces = document.querySelectorAll('.piece');
+    existingPieces.forEach(p => p.remove());
+    pieces = [];
+    messageEl.textContent = '';
+    
+    // 새 이미지로 게임 시작
+    initGame(randomImage);
 }
 
 function createBoard() {
@@ -38,7 +69,7 @@ function createBoard() {
     }
 }
 
-function createPieces() {
+function createPieces(imagePath) {
     // Remove any existing pieces from gameArea (except board)
     const existingPieces = document.querySelectorAll('.piece');
     existingPieces.forEach(p => p.remove());
@@ -52,6 +83,9 @@ function createPieces() {
         const r = Math.floor(i / COLS);
         const c = i % COLS;
 
+        // Background image 설정
+        piece.style.backgroundImage = `url('${imagePath}')`;
+        
         // Background positioning
         const bgX = -(c * TILE_SIZE);
         const bgY = -(r * TILE_SIZE);
@@ -69,14 +103,15 @@ function createPieces() {
 
 function scatterPieces() {
     messageEl.textContent = '';
-    const areaRect = gameArea.getBoundingClientRect();
-    // We want to scatter them in the game-area but NOT on the board initially if possible, 
-    // or just randomly anywhere. Randomly anywhere is fine, user sorts them.
-
+    
+    // gameArea의 실제 크기 사용 (offsetWidth/offsetHeight는 padding 포함, border 제외)
+    const areaWidth = gameArea.offsetWidth;
+    const areaHeight = gameArea.offsetHeight;
+    
     // Define the range for random position
     // Available width/height minus piece size
-    const maxX = areaRect.width - TILE_SIZE;
-    const maxY = areaRect.height - TILE_SIZE;
+    const maxX = Math.max(0, areaWidth - TILE_SIZE);
+    const maxY = Math.max(0, areaHeight - TILE_SIZE);
 
     pieces.forEach(piece => {
         // Reset state
@@ -84,7 +119,7 @@ function scatterPieces() {
         piece.style.top = '0px';
         piece.style.zIndex = '10';
 
-        // Random pos
+        // Random pos - gameArea 내부에 골고루 분산
         const randX = Math.random() * maxX;
         const randY = Math.random() * maxY;
 
@@ -237,6 +272,18 @@ function checkWin() {
     }
 }
 
-resetBtn.addEventListener('click', scatterPieces);
+// 이벤트 리스너
+resetBtn.addEventListener('click', () => {
+    if (currentImage) {
+        scatterPieces();
+    }
+});
 
-initGame();
+changeImageBtn.addEventListener('click', changeToRandomImage);
+
+// 페이지 로드 시 자동으로 랜덤 이미지 선택 후 게임 시작
+window.addEventListener('load', () => {
+    const randomIndex = Math.floor(Math.random() * availableImages.length);
+    const randomImage = availableImages[randomIndex];
+    initGame(randomImage);
+});
