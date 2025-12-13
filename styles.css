@@ -1,14 +1,14 @@
-/* Base tokens */
+/* Base tokens - 한지 느낌의 따뜻한 색감 */
 :root {
-  --bg: #ffffff;
-  --text: #0f172a; /* slate-900 */
-  --muted: #475569; /* slate-600 */
-  --card: #f8fafc; /* slate-50 */
-  --border: #e2e8f0; /* slate-200 */
-  --primary: #2563eb; /* blue-600 */
+  --bg: #f0eae0; /* 한지 아이보리 베이지 */
+  --text: #3d3528; /* 따뜻한 갈색 */
+  --muted: #6b5d4a; /* 중간 갈색 */
+  --card: #f5efe5; /* 약간 밝은 베이지 */
+  --border: #d4c4b0; /* 연한 베이지 */
+  --primary: #8b6f47; /* 따뜻한 갈색 */
   --primary-contrast: #ffffff;
-  --accent: #22d3ee; /* cyan-400 */
-  --shadow: 0 6px 24px rgba(15, 23, 42, 0.08);
+  --accent: #a08c78; /* 한지 섬유 색상 */
+  --shadow: 0 6px 24px rgba(61, 53, 40, 0.12);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -27,15 +27,15 @@
 
 /* Explicit theme override via data-attribute */
 html[data-theme="light"] {
-  --bg: #ffffff;
-  --text: #0f172a;
-  --muted: #475569;
-  --card: #f8fafc;
-  --border: #e2e8f0;
-  --primary: #2563eb;
+  --bg: #f0eae0; /* 한지 아이보리 베이지 */
+  --text: #3d3528; /* 따뜻한 갈색 */
+  --muted: #6b5d4a; /* 중간 갈색 */
+  --card: #f5efe5; /* 약간 밝은 베이지 */
+  --border: #d4c4b0; /* 연한 베이지 */
+  --primary: #8b6f47; /* 따뜻한 갈색 */
   --primary-contrast: #ffffff;
-  --accent: #22d3ee;
-  --shadow: 0 6px 24px rgba(15, 23, 42, 0.08);
+  --accent: #a08c78; /* 한지 섬유 색상 */
+  --shadow: 0 6px 24px rgba(61, 53, 40, 0.12);
 }
 html[data-theme="dark"] {
   --bg: #0b1220;
@@ -57,7 +57,7 @@ body {
   margin: 0;
   font-family: 'Pretendard', system-ui, -apple-system, Segoe UI, Roboto, Apple SD Gothic Neo, Noto Sans KR, sans-serif;
   color: var(--text);
-  background: var(--bg);
+  background: transparent; /* 한지 배경이 보이도록 투명하게 */
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -68,8 +68,8 @@ body {
   position: sticky;
   top: 0;
   z-index: 20;
-  background: color-mix(in oklab, var(--bg) 92%, transparent);
-  backdrop-filter: saturate(140%) blur(8px);
+  background: color-mix(in oklab, var(--card) 85%, transparent);
+  backdrop-filter: saturate(120%) blur(8px);
   border-bottom: 1px solid var(--border);
 }
 .nav {
@@ -187,11 +187,12 @@ body {
   .projects { grid-template-columns: 1fr; }
 }
 .card {
-  background: var(--card);
+  background: color-mix(in oklab, var(--card) 95%, transparent);
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 18px;
   box-shadow: var(--shadow);
+  backdrop-filter: blur(4px);
 }
 .card h3 {
   margin: 0 0 6px;
@@ -222,12 +223,13 @@ body {
   gap: 8px;
   text-decoration: none;
   border: 1px solid var(--border);
-  background: var(--bg);
+  background: color-mix(in oklab, var(--card) 90%, transparent);
   color: var(--text);
   padding: 10px 14px;
   border-radius: 12px;
   transition: transform .02s ease, background .2s ease;
   will-change: transform;
+  backdrop-filter: blur(4px);
 }
 .btn:hover {
   transform: translateY(-1px);
@@ -236,7 +238,7 @@ body {
 .btn.primary {
   background: var(--primary);
   color: var(--primary-contrast);
-  border-color: transparent;
+  border-color: var(--primary);
 }
 .btn.primary:hover {
   filter: saturate(110%);
