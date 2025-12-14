@@ -58,11 +58,39 @@ body {
     box-sizing: border-box;
 }
 
+/* 모바일에서 패딩 최소화 */
+@media (max-width: 768px) {
+    .main-container {
+        padding: 5px;
+    }
+    
+    body {
+        padding: 5px;
+    }
+}
+
 h1 {
     margin: 0.5rem 0;
     font-size: clamp(1.2rem, 4vw, 1.8rem);
     color: var(--primary-color);
     z-index: 10;
+}
+
+/* 모바일에서 헤더와 컨트롤 공간 최소화 */
+@media (max-width: 768px) {
+    h1 {
+        margin: 0.3rem 0;
+        font-size: clamp(1rem, 5vw, 1.5rem);
+    }
+    
+    .controls {
+        margin-top: 0.5rem;
+    }
+    
+    .message {
+        margin-top: 0.5rem;
+        font-size: 1.2rem;
+    }
 }
 
 .game-area {
@@ -80,6 +108,27 @@ h1 {
     justify-content: center;
     align-items: center;
     overflow: hidden;
+}
+
+/* 모바일에서 세로 공간 확보 */
+@media (max-width: 768px) {
+    .game-area {
+        height: min(calc(100vh - 140px), calc(95vw * 1.4));
+        /* 모바일에서는 세로 공간을 더 크게 - 퍼즐 조각을 놓을 공간 확보 */
+        min-height: 550px;
+        /* 최소 높이 보장 */
+        max-height: calc(100vh - 120px);
+        /* 헤더와 컨트롤 공간 최소화 */
+    }
+}
+
+@media (max-width: 480px) {
+    .game-area {
+        height: min(calc(100vh - 120px), calc(95vw * 1.5));
+        /* 작은 모바일에서는 더 많은 세로 공간 */
+        min-height: 500px;
+        max-height: calc(100vh - 100px);
+    }
 }
 
 .puzzle-board {
