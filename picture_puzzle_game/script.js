@@ -34,6 +34,7 @@ const puzzleColsInput = document.getElementById('puzzle-cols');
 
 let selectedImagePath = '';
 let uploadedImageFile = null;
+let uploadedImageFileName = ''; // 업로드된 이미지의 파일명 저장
 
 let startTime = null;
 let timerInterval = null;
@@ -607,6 +608,7 @@ function showImageSelectPopup() {
     // 기본값 설정
     selectedImagePath = '';
     uploadedImageFile = null;
+    uploadedImageFileName = '';
     puzzleRowsInput.value = '4';
     puzzleColsInput.value = '4';
     
@@ -684,6 +686,7 @@ imageUploadInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (file && file.type.startsWith('image/')) {
         uploadedImageFile = file;
+        uploadedImageFileName = file.name; // 파일명 저장
         const reader = new FileReader();
         reader.onload = (event) => {
             uploadPreview.innerHTML = `<img src="${event.target.result}" alt="업로드된 이미지">`;
@@ -726,7 +729,7 @@ startGameBtn.addEventListener('click', () => {
             alert('이미지를 업로드해주세요.');
             return;
         }
-        // 업로드된 이미지를 Data URL로 사용
+        // 업로드된 이미지를 Data URL로 사용 (게임에는 Data URL 사용)
         const reader = new FileReader();
         reader.onload = (event) => {
             imageToUse = event.target.result;
@@ -812,8 +815,14 @@ function displaySameImageHistory() {
     // localStorage에서 모든 히스토리 가져오기
     const allHistory = JSON.parse(localStorage.getItem('puzzleGameHistory') || '[]');
     
+    // 현재 이미지 경로 결정: Data URL인 경우 파일명 사용
+    let currentImagePath = currentImage;
+    if (currentImage.startsWith('data:image/')) {
+        currentImagePath = uploadedImageFileName || `uploaded_${Date.now()}.jpg`;
+    }
+    
     // 같은 이미지 경로의 게임 결과 필터링
-    const sameImageResults = allHistory.filter(result => result.imagePath === currentImage);
+    const sameImageResults = allHistory.filter(result => result.imagePath === currentImagePath);
     
     if (sameImageResults.length === 0) {
         sameImageHistoryList.innerHTML = '<p style="text-align: center; color: #666; padding: 10px; font-size: 0.9rem;">이 이미지로 저장된 게임 결과가 없습니다.</p>';
@@ -901,11 +910,18 @@ function saveGameResult(playerName) {
     const elapsed = Date.now() - startTime;
     const now = new Date();
     
+    // 이미지 경로 결정: Data URL인 경우 파일명 사용, 아니면 원래 경로 사용
+    let imagePathToSave = currentImage;
+    if (currentImage.startsWith('data:image/')) {
+        // Data URL인 경우 업로드된 파일명 사용
+        imagePathToSave = uploadedImageFileName || `uploaded_${Date.now()}.jpg`;
+    }
+    
     // 게임 결과 데이터
     const gameResult = {
         id: Date.now(), // 고유 ID
         playerName: playerName || '익명',
-        imagePath: currentImage,
+        imagePath: imagePathToSave,
         puzzleSize: `${ROWS}x${COLS}`,
         completionTime: elapsed, // 밀리초
         completionTimeFormatted: formatTime(elapsed),
@@ -934,13 +950,13 @@ function saveGameResult(playerName) {
     localStorage.setItem('puzzleGameHistory', JSON.stringify(history));
     
     // 저장 완료 메시지
-    alert('게임 결과가 저장되었습니다!');
+    // alert('게임 결과가 저장되었습니다!');
     
     // 콘솔에 저장된 모든 게임 결과 출력
-    console.log('=== 저장된 게임 결과 (전체) ===');
-    console.log('총 저장된 게임 수:', history.length);
-    console.log('저장된 게임 결과:', history);
-    console.log('==============================');
+    // console.log('=== 저장된 게임 결과 (전체) ===');
+    // console.log('총 저장된 게임 수:', history.length);
+    // console.log('저장된 게임 결과:', history);
+    // console.log('==============================');
     
     // 저장 팝업 닫기
     saveResultPopup.classList.add('hidden');
@@ -977,24 +993,24 @@ function displayHistory() {
     const history = JSON.parse(localStorage.getItem('puzzleGameHistory') || '[]');
     
     // 콘솔에 저장된 모든 게임 결과 출력
-    console.log('=== 저장된 게임 결과 (히스토리 표시 시) ===');
-    console.log('총 저장된 게임 수:', history.length);
-    if (history.length > 0) {
-        console.log('저장된 게임 결과:', history);
-        console.log('상세 정보:');
-        history.forEach((result, index) => {
-            console.log(`[${index + 1}]`, {
-                이름: result.playerName,
-                퍼즐크기: result.puzzleSize,
-                완성시간: result.completionTimeFormatted,
-                날짜: result.dateFormatted,
-                이미지경로: result.imagePath
-            });
-        });
-    } else {
-        console.log('저장된 게임 결과가 없습니다.');
-    }
-    console.log('==========================================');
+    // console.log('=== 저장된 게임 결과 (히스토리 표시 시) ===');
+    // console.log('총 저장된 게임 수:', history.length);
+    // if (history.length > 0) {
+    //     console.log('저장된 게임 결과:', history);
+    //     console.log('상세 정보:');
+    //     history.forEach((result, index) => {
+    //         console.log(`[${index + 1}]`, {
+    //             이름: result.playerName,
+    //             퍼즐크기: result.puzzleSize,
+    //             완성시간: result.completionTimeFormatted,
+    //             날짜: result.dateFormatted,
+    //             이미지경로: result.imagePath
+    //         });
+    //     });
+    // } else {
+    //     console.log('저장된 게임 결과가 없습니다.');
+    // }
+    // console.log('==========================================');
     
     if (history.length === 0) {
         historyContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">저장된 게임 결과가 없습니다.</p>';
