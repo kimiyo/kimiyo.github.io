@@ -275,11 +275,58 @@ function scatterPieces() {
     
     // 동적 타일 크기 가져오기
     const tileSize = getTileSize();
+    const boardSize = getBoardSize();
     
-    // Define the range for random position
-    // Available width/height minus piece size
-    const maxX = Math.max(0, areaWidth - tileSize);
-    const maxY = Math.max(0, areaHeight - tileSize);
+    // 보드의 실제 위치 계산 (gameArea 기준)
+    const gameAreaRect = gameArea.getBoundingClientRect();
+    const boardRect = board.getBoundingClientRect();
+    const boardLeft = boardRect.left - gameAreaRect.left;
+    const boardTop = boardRect.top - gameAreaRect.top;
+    const boardRight = boardLeft + boardSize;
+    const boardBottom = boardTop + boardSize;
+    
+    // 보드 영역을 피해서 배치할 수 있는 영역들 정의
+    const safeZones = [];
+    
+    // 보드 위쪽 영역
+    if (boardTop > tileSize) {
+        safeZones.push({
+            left: 0,
+            top: 0,
+            right: areaWidth,
+            bottom: boardTop - 10 // 보드와 10px 간격
+        });
+    }
+    
+    // 보드 아래쪽 영역
+    if (boardBottom < areaHeight - tileSize) {
+        safeZones.push({
+            left: 0,
+            top: boardBottom + 10, // 보드와 10px 간격
+            right: areaWidth,
+            bottom: areaHeight
+        });
+    }
+    
+    // 보드 왼쪽 영역
+    if (boardLeft > tileSize) {
+        safeZones.push({
+            left: 0,
+            top: Math.max(0, boardTop - 10),
+            right: boardLeft - 10, // 보드와 10px 간격
+            bottom: Math.min(areaHeight, boardBottom + 10)
+        });
+    }
+    
+    // 보드 오른쪽 영역
+    if (boardRight < areaWidth - tileSize) {
+        safeZones.push({
+            left: boardRight + 10, // 보드와 10px 간격
+            top: Math.max(0, boardTop - 10),
+            right: areaWidth,
+            bottom: Math.min(areaHeight, boardBottom + 10)
+        });
+    }
 
     pieces.forEach(piece => {
         // Reset state
@@ -287,12 +334,94 @@ function scatterPieces() {
         piece.style.top = '0px';
         piece.style.zIndex = '10';
 
-        // Random pos - gameArea 내부에 골고루 분산
-        const randX = Math.random() * maxX;
-        const randY = Math.random() * maxY;
-
-        piece.style.left = `${randX}px`;
-        piece.style.top = `${randY}px`;
+        // 보드 영역을 피해서 game-area 내부의 안전한 영역에 배치
+        let placed = false;
+        let attempts = 0;
+        const maxAttempts = 100;
+        
+        while (!placed && attempts < maxAttempts) {
+            // 안전한 영역 중 하나를 랜덤 선택
+            if (safeZones.length > 0) {
+                const zone = safeZones[Math.floor(Math.random() * safeZones.length)];
+                const zoneWidth = zone.right - zone.left;
+                const zoneHeight = zone.bottom - zone.top;
+                
+                if (zoneWidth >= tileSize && zoneHeight >= tileSize) {
+                    const randX = zone.left + Math.random() * (zoneWidth - tileSize);
+                    const randY = zone.top + Math.random() * (zoneHeight - tileSize);
+                    
+                    // 보드 영역과 겹치는지 확인
+                    const pieceRight = randX + tileSize;
+                    const pieceBottom = randY + tileSize;
+                    
+                    const overlapsBoard = !(
+                        pieceRight < boardLeft - 10 ||
+                        randX > boardRight + 10 ||
+                        pieceBottom < boardTop - 10 ||
+                        randY > boardBottom + 10
+                    );
+                    
+                    // game-area 경계 내에 있는지 확인
+                    const withinGameArea = (
+                        randX >= 0 &&
+                        randY >= 0 &&
+                        pieceRight <= areaWidth &&
+                        pieceBottom <= areaHeight
+                    );
+                    
+                    if (!overlapsBoard && withinGameArea) {
+                        piece.style.left = `${randX}px`;
+                        piece.style.top = `${randY}px`;
+                        placed = true;
+                    }
+                }
+            }
+            attempts++;
+        }
+        
+        // 안전한 영역을 찾지 못한 경우 game-area 내부의 보드가 아닌 곳에 강제 배치
+        if (!placed) {
+            // game-area 내부이지만 보드 영역을 피해서 배치
+            let fallbackX, fallbackY;
+            let fallbackAttempts = 0;
+            const maxFallbackAttempts = 50;
+            
+            while (fallbackAttempts < maxFallbackAttempts) {
+                fallbackX = Math.random() * (areaWidth - tileSize);
+                fallbackY = Math.random() * (areaHeight - tileSize);
+                
+                const pieceRight = fallbackX + tileSize;
+                const pieceBottom = fallbackY + tileSize;
+                
+                const overlapsBoard = !(
+                    pieceRight < boardLeft - 10 ||
+                    fallbackX > boardRight + 10 ||
+                    pieceBottom < boardTop - 10 ||
+                    fallbackY > boardBottom + 10
+                );
+                
+                if (!overlapsBoard) {
+                    piece.style.left = `${fallbackX}px`;
+                    piece.style.top = `${fallbackY}px`;
+                    placed = true;
+                    break;
+                }
+                fallbackAttempts++;
+            }
+            
+            // 최후의 수단: 보드 가장자리 근처에 배치 (완전히 겹치지 않도록)
+            if (!placed) {
+                // 보드 왼쪽에 배치 시도
+                if (boardLeft > tileSize) {
+                    piece.style.left = `${Math.max(0, boardLeft - tileSize - 10)}px`;
+                    piece.style.top = `${Math.random() * Math.max(0, areaHeight - tileSize)}px`;
+                } else {
+                    // 보드 오른쪽에 배치 시도
+                    piece.style.left = `${Math.min(areaWidth - tileSize, boardRight + 10)}px`;
+                    piece.style.top = `${Math.random() * Math.max(0, areaHeight - tileSize)}px`;
+                }
+            }
+        }
     });
 }
 

@@ -154,7 +154,7 @@ h1 {
     display: flex;
     justify-content: center;
     align-items: center;
-    overflow: hidden;
+    overflow: visible;
 }
 
 /* 모바일에서 세로 공간 확보 */
