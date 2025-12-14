@@ -76,11 +76,44 @@ h1 {
     z-index: 10;
 }
 
+/* 헤더 섹션 스타일 */
+.header-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 0.5rem;
+}
+
+.timer {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    background: color-mix(in oklab, var(--primary-color) 10%, transparent);
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 2px solid var(--primary-color);
+    font-family: 'Courier New', monospace;
+    min-width: 80px;
+    text-align: center;
+}
+
 /* 모바일에서 헤더와 컨트롤 공간 최소화 */
 @media (max-width: 768px) {
+    .header-section {
+        gap: 10px;
+    }
+    
     h1 {
         margin: 0.3rem 0;
         font-size: clamp(1rem, 5vw, 1.5rem);
+    }
+    
+    .timer {
+        font-size: 1.2rem;
+        padding: 6px 12px;
+        min-width: 70px;
     }
     
     .controls {
@@ -90,6 +123,20 @@ h1 {
     .message {
         margin-top: 0.5rem;
         font-size: 1.2rem;
+    }
+    
+    .popup-content {
+        padding: 30px 20px;
+        width: 90%;
+    }
+    
+    .popup-content h2 {
+        font-size: 1.5rem;
+    }
+    
+    .celebration-animation {
+        width: 150px;
+        height: 150px;
     }
 }
 
@@ -236,4 +283,87 @@ h1 {
     color: #2ecc71;
     min-height: 2rem;
     z-index: 10;
+}
+
+/* 완성 팝업 스타일 */
+.completion-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease;
+}
+
+.completion-popup.hidden {
+    display: none;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.popup-content {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 90%;
+    width: 400px;
+    animation: slideUp 0.4s ease;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.celebration-animation {
+    width: 200px;
+    height: 200px;
+    margin: 0 auto 20px;
+}
+
+.popup-content h2 {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin: 20px 0 10px;
+}
+
+.completion-message {
+    font-size: 1.2rem;
+    color: #333;
+    margin: 10px 0;
+}
+
+.completion-time {
+    font-size: 1.1rem;
+    color: #666;
+    margin: 15px 0 25px;
+    font-weight: bold;
+}
+
+.popup-content .btn.primary {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 12px 24px;
+    font-size: 1.1rem;
 }

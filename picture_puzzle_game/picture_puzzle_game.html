@@ -11,7 +11,10 @@
 
 <body>
     <div class="main-container">
-        <h1>그림 맞추기 퍼즐</h1>
+        <div class="header-section">
+            <h1>그림 맞추기 퍼즐</h1>
+            <div class="timer" id="timer">00:00</div>
+        </div>
         <div class="game-area" id="game-area">
             <div class="puzzle-board" id="board">
                 <!-- Drop zones will be generated here -->
@@ -24,6 +27,20 @@
         </div>
         <div id="message" class="message"></div>
     </div>
+
+    <!-- 완성 팝업 -->
+    <div id="completion-popup" class="completion-popup hidden">
+        <div class="popup-content">
+            <div class="celebration-animation" id="celebration-animation">
+                <!-- SVG 애니메이션이 여기에 삽입됩니다 -->
+            </div>
+            <h2>축하합니다! 🎉</h2>
+            <p class="completion-message">모든 퍼즐을 맞추셨습니다!</p>
+            <p class="completion-time">완성 시간: <span id="final-time">00:00</span></p>
+            <button id="close-popup" class="btn primary">확인</button>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 

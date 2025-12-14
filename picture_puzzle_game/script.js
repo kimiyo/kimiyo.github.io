@@ -5,6 +5,15 @@ const messageEl = document.getElementById('message');
 const changeImageBtn = document.getElementById('change-image-btn');
 const controls = document.getElementById('controls');
 
+const timerEl = document.getElementById('timer');
+const completionPopup = document.getElementById('completion-popup');
+const finalTimeEl = document.getElementById('final-time');
+const closePopupBtn = document.getElementById('close-popup');
+
+let startTime = null;
+let timerInterval = null;
+let isGameComplete = false;
+
 const ROWS = 4;
 const COLS = 4;
 
@@ -40,14 +49,128 @@ let pieces = [];
 let dropZones = [];
 let currentImage = '';
 
+// 타이머 시작
+function startTimer() {
+    startTime = Date.now();
+    isGameComplete = false;
+    timerInterval = setInterval(updateTimer, 100);
+}
+
+// 타이머 업데이트
+function updateTimer() {
+    if (!startTime || isGameComplete) return;
+    
+    const elapsed = Date.now() - startTime;
+    const minutes = Math.floor(elapsed / 60000);
+    const seconds = Math.floor((elapsed % 60000) / 1000);
+    
+    timerEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+// 타이머 정지
+function stopTimer() {
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+}
+
+// 시간 포맷팅
+function formatTime(ms) {
+    const minutes = Math.floor(ms / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+// 축하 SVG 애니메이션 생성
+function createCelebrationAnimation() {
+    const animationEl = document.getElementById('celebration-animation');
+    animationEl.innerHTML = `
+        <svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <!-- 별들 -->
+            <g id="stars">
+                <circle cx="50" cy="50" r="3" fill="#FFD700">
+                    <animate attributeName="opacity" values="0;1;0" dur="1s" repeatCount="indefinite" begin="0s"/>
+                    <animateTransform attributeName="transform" type="scale" values="0;1.5;0" dur="1s" repeatCount="indefinite" begin="0s"/>
+                </circle>
+                <circle cx="150" cy="50" r="3" fill="#FFD700">
+                    <animate attributeName="opacity" values="0;1;0" dur="1s" repeatCount="indefinite" begin="0.2s"/>
+                    <animateTransform attributeName="transform" type="scale" values="0;1.5;0" dur="1s" repeatCount="indefinite" begin="0.2s"/>
+                </circle>
+                <circle cx="50" cy="150" r="3" fill="#FFD700">
+                    <animate attributeName="opacity" values="0;1;0" dur="1s" repeatCount="indefinite" begin="0.4s"/>
+                    <animateTransform attributeName="transform" type="scale" values="0;1.5;0" dur="1s" repeatCount="indefinite" begin="0.4s"/>
+                </circle>
+                <circle cx="150" cy="150" r="3" fill="#FFD700">
+                    <animate attributeName="opacity" values="0;1;0" dur="1s" repeatCount="indefinite" begin="0.6s"/>
+                    <animateTransform attributeName="transform" type="scale" values="0;1.5;0" dur="1s" repeatCount="indefinite" begin="0.6s"/>
+                </circle>
+            </g>
+            
+            <!-- 중앙 별 -->
+            <g id="center-star">
+                <path d="M100,60 L105,75 L120,75 L108,85 L113,100 L100,90 L87,100 L92,85 L80,75 L95,75 Z" fill="#FFD700">
+                    <animateTransform attributeName="transform" type="rotate" values="0 100 80;360 100 80" dur="2s" repeatCount="indefinite"/>
+                </path>
+            </g>
+            
+            <!-- 폭죽 효과 -->
+            <g id="fireworks">
+                <circle cx="100" cy="100" r="2" fill="#FF6B6B">
+                    <animate attributeName="r" values="2;30;2" dur="1.5s" repeatCount="indefinite" begin="0s"/>
+                    <animate attributeName="opacity" values="1;0;0" dur="1.5s" repeatCount="indefinite" begin="0s"/>
+                </circle>
+                <circle cx="100" cy="100" r="2" fill="#4ECDC4">
+                    <animate attributeName="r" values="2;25;2" dur="1.5s" repeatCount="indefinite" begin="0.3s"/>
+                    <animate attributeName="opacity" values="1;0;0" dur="1.5s" repeatCount="indefinite" begin="0.3s"/>
+                </circle>
+                <circle cx="100" cy="100" r="2" fill="#FFE66D">
+                    <animate attributeName="r" values="2;35;2" dur="1.5s" repeatCount="indefinite" begin="0.6s"/>
+                    <animate attributeName="opacity" values="1;0;0" dur="1.5s" repeatCount="indefinite" begin="0.6s"/>
+                </circle>
+            </g>
+            
+            <!-- 하트 -->
+            <g id="hearts">
+                <path d="M100,120 C95,115 85,115 85,120 C85,125 95,130 100,135 C105,130 115,125 115,120 C115,115 105,115 100,120 Z" fill="#FF69B4">
+                    <animate attributeName="opacity" values="0;1;1;0" dur="2s" repeatCount="indefinite" begin="0s"/>
+                    <animateTransform attributeName="transform" type="scale" values="0.5;1;1;0.5" dur="2s" repeatCount="indefinite" begin="0s"/>
+                </path>
+            </g>
+        </svg>
+    `;
+}
+
+// 완성 팝업 표시
+function showCompletionPopup() {
+    if (!startTime) return;
+    
+    const elapsed = Date.now() - startTime;
+    finalTimeEl.textContent = formatTime(elapsed);
+    
+    createCelebrationAnimation();
+    completionPopup.classList.remove('hidden');
+    stopTimer();
+}
+
+// 완성 팝업 닫기
+if (closePopupBtn) {
+    closePopupBtn.addEventListener('click', () => {
+        completionPopup.classList.add('hidden');
+    });
+}
+
 function initGame(imagePath) {
     currentImage = imagePath;
+    isGameComplete = false;
+    stopTimer(); // 기존 타이머 정지
     
     // DOM이 업데이트될 시간을 주기 위해 약간의 지연
     setTimeout(() => {
         createBoard();
         createPieces(imagePath);
         scatterPieces();
+        startTimer(); // 새 게임 시작 시 타이머 시작
     }, 10);
 }
 
@@ -62,6 +185,7 @@ function changeToRandomImage() {
     pieces = [];
     messageEl.textContent = '';
     
+    stopTimer();
     // 새 이미지로 게임 시작
     initGame(randomImage);
 }
@@ -292,14 +416,17 @@ function checkWin() {
         }
     });
 
-    if (correctCount === ROWS * COLS) {
-        messageEl.textContent = '축하합니다! 모든 퍼즐을 맞추셨습니다!';
+    if (correctCount === ROWS * COLS && !isGameComplete) {
+        isGameComplete = true;
+        showCompletionPopup();
     }
 }
 
 // 이벤트 리스너
 resetBtn.addEventListener('click', () => {
     if (currentImage) {
+        stopTimer();
+        startTimer(); // 리셋 시 타이머 재시작
         scatterPieces();
     }
 });
@@ -334,3 +461,4 @@ window.addEventListener('resize', () => {
         }
     }, 250);
 });
+
