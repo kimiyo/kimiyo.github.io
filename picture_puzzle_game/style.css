@@ -182,8 +182,7 @@ h1 {
     width: var(--board-size);
     height: var(--board-size);
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: repeat(4, 1fr);
+    /* grid-template-columns and grid-template-rows are set dynamically via JavaScript */
     background-color: rgba(255, 255, 255, 0.5);
     border: 2px dashed var(--primary-color);
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -192,8 +191,7 @@ h1 {
 }
 
 .drop-zone {
-    width: var(--tile-size);
-    height: var(--tile-size);
+    /* width and height are automatically set by CSS Grid */
     border: 1px solid rgba(0, 0, 0, 0.1);
     box-sizing: border-box;
 }

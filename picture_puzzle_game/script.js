@@ -181,13 +181,17 @@ function initGame(imagePath) {
     isGameComplete = false;
     stopTimer(); // 기존 타이머 정지
     
-    // DOM이 업데이트될 시간을 주기 위해 약간의 지연
-    setTimeout(() => {
-        createBoard();
-        createPieces(imagePath);
-        scatterPieces();
-        startTimer(); // 새 게임 시작 시 타이머 시작
-    }, 10);
+    // 보드 생성
+    createBoard();
+    
+    // DOM이 업데이트되고 레이아웃이 계산된 후 조각 생성
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            createPieces(imagePath);
+            scatterPieces();
+            startTimer(); // 새 게임 시작 시 타이머 시작
+        });
+    });
 }
 
 function changeToRandomImage() {
@@ -210,9 +214,9 @@ function createBoard() {
     board.innerHTML = '';
     dropZones = [];
 
-    // CSS 그리드 템플릿 동적 설정
-    board.style.gridTemplateColumns = `repeat(${COLS}, 1fr)`;
-    board.style.gridTemplateRows = `repeat(${ROWS}, 1fr)`;
+    // CSS 그리드 템플릿 동적 설정 - 명시적으로 설정하여 CSS 기본값을 덮어씀
+    board.style.setProperty('grid-template-columns', `repeat(${COLS}, 1fr)`, 'important');
+    board.style.setProperty('grid-template-rows', `repeat(${ROWS}, 1fr)`, 'important');
 
     // Create drop zones (grid slots)
     // The board uses CSS grid, so we just append divs.
@@ -238,6 +242,11 @@ function createPieces(imagePath) {
 
     pieces = [];
 
+    // 보드가 DOM에 추가되고 레이아웃이 계산된 후 크기를 가져옴
+    // 동적 타일 크기 계산 (보드 크기를 기준으로)
+    const boardSize = getBoardSize();
+    const tileSize = boardSize / COLS; // COLS를 사용하여 정확한 타일 크기 계산
+
     for (let i = 0; i < ROWS * COLS; i++) {
         const piece = document.createElement('div');
         piece.classList.add('piece');
@@ -245,12 +254,14 @@ function createPieces(imagePath) {
         const r = Math.floor(i / COLS);
         const c = i % COLS;
 
+        // 조각 크기를 명시적으로 설정 (동적 크기)
+        piece.style.width = `${tileSize}px`;
+        piece.style.height = `${tileSize}px`;
+
         // Background image 설정
         piece.style.backgroundImage = `url('${imagePath}')`;
         
         // Background positioning - 동적 크기 사용
-        const tileSize = getTileSize();
-        const boardSize = getBoardSize();
         const bgX = -(c * tileSize);
         const bgY = -(r * tileSize);
         piece.style.backgroundPosition = `${bgX}px ${bgY}px`;
