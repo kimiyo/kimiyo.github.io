@@ -10,6 +10,15 @@ const completionPopup = document.getElementById('completion-popup');
 const finalTimeEl = document.getElementById('final-time');
 const closePopupBtn = document.getElementById('close-popup');
 
+// 게임 결과 저장 관련 요소
+const saveResultBtn = document.getElementById('save-result-btn');
+const saveResultPopup = document.getElementById('save-result-popup');
+const playerNameInput = document.getElementById('player-name-input');
+const confirmSaveBtn = document.getElementById('confirm-save-btn');
+const cancelSaveBtn = document.getElementById('cancel-save-btn');
+const gameHistorySection = document.getElementById('game-history-section');
+const historyContainer = document.getElementById('history-container');
+
 // 이미지 선택 팝업 관련 요소
 const imageSelectPopup = document.getElementById('image-select-popup');
 const startGameBtn = document.getElementById('start-game-btn');
@@ -185,13 +194,12 @@ function initGame(imagePath) {
     createBoard();
     
     // DOM이 업데이트되고 레이아웃이 계산된 후 조각 생성
-    requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-            createPieces(imagePath);
-            scatterPieces();
-            startTimer(); // 새 게임 시작 시 타이머 시작
-        });
-    });
+    // setTimeout을 사용하여 보드가 완전히 렌더링된 후 조각 생성
+    setTimeout(() => {
+        createPieces(imagePath);
+        scatterPieces();
+        startTimer(); // 새 게임 시작 시 타이머 시작
+    }, 50);
 }
 
 function changeToRandomImage() {
@@ -275,6 +283,9 @@ function createPieces(imagePath) {
         gameArea.appendChild(piece);
         pieces.push(piece);
     }
+    
+    // 디버깅: 조각이 제대로 생성되었는지 확인
+    console.log(`조각 ${pieces.length}개 생성 완료`);
 }
 
 function scatterPieces() {
@@ -788,4 +799,254 @@ window.addEventListener('resize', () => {
 function changeToRandomImage() {
     showImageSelectPopup();
 }
+
+// 같은 이미지 히스토리 관련 요소
+const sameImageHistory = document.getElementById('same-image-history');
+const sameImageHistoryList = document.getElementById('same-image-history-list');
+const savePopupTimeEl = document.getElementById('save-popup-time');
+
+// 같은 이미지의 게임 결과 목록 표시 함수
+function displaySameImageHistory() {
+    if (!currentImage) return;
+    
+    // localStorage에서 모든 히스토리 가져오기
+    const allHistory = JSON.parse(localStorage.getItem('puzzleGameHistory') || '[]');
+    
+    // 같은 이미지 경로의 게임 결과 필터링
+    const sameImageResults = allHistory.filter(result => result.imagePath === currentImage);
+    
+    if (sameImageResults.length === 0) {
+        sameImageHistoryList.innerHTML = '<p style="text-align: center; color: #666; padding: 10px; font-size: 0.9rem;">이 이미지로 저장된 게임 결과가 없습니다.</p>';
+        return;
+    }
+    
+    // 퍼즐 크기별로 그룹화
+    const groupedBySize = {};
+    sameImageResults.forEach(result => {
+        const size = result.puzzleSize;
+        if (!groupedBySize[size]) {
+            groupedBySize[size] = [];
+        }
+        groupedBySize[size].push(result);
+    });
+    
+    // 각 그룹을 완성 시간 순으로 정렬 (짧은 시간이 위로)
+    Object.keys(groupedBySize).forEach(size => {
+        groupedBySize[size].sort((a, b) => a.completionTime - b.completionTime);
+    });
+    
+    // 퍼즐 크기별로 정렬된 결과를 하나의 배열로 합치기
+    const sortedResults = [];
+    Object.keys(groupedBySize).sort().forEach(size => {
+        sortedResults.push(...groupedBySize[size]);
+    });
+    
+    // 목록 HTML 생성
+    sameImageHistoryList.innerHTML = '';
+    
+    sortedResults.forEach((result, index) => {
+        const historyItem = document.createElement('div');
+        historyItem.classList.add('same-image-history-item');
+        
+        historyItem.innerHTML = `
+            <div class="same-image-history-info">
+                <div class="same-image-history-size">${result.puzzleSize}</div>
+                <div class="same-image-history-name">${result.playerName}</div>
+                <div class="same-image-history-time">${result.completionTimeFormatted}</div>
+                <div class="same-image-history-date">${result.dateFormatted}</div>
+            </div>
+        `;
+        
+        sameImageHistoryList.appendChild(historyItem);
+    });
+}
+
+// 게임 결과 저장 버튼 클릭
+if (saveResultBtn) {
+    saveResultBtn.addEventListener('click', () => {
+        saveResultPopup.classList.remove('hidden');
+        playerNameInput.value = '';
+        playerNameInput.focus();
+        
+        // 현재 완성 시간 표시
+        if (finalTimeEl && savePopupTimeEl) {
+            savePopupTimeEl.textContent = finalTimeEl.textContent;
+        }
+        
+        // 같은 이미지의 이전 게임 결과 표시
+        displaySameImageHistory();
+    });
+}
+
+// 저장 취소 버튼
+if (cancelSaveBtn) {
+    cancelSaveBtn.addEventListener('click', () => {
+        saveResultPopup.classList.add('hidden');
+    });
+}
+
+// 저장 팝업 외부 클릭 시 닫기
+if (saveResultPopup) {
+    saveResultPopup.addEventListener('click', (e) => {
+        if (e.target === saveResultPopup) {
+            saveResultPopup.classList.add('hidden');
+        }
+    });
+}
+
+// 게임 결과 저장 함수
+function saveGameResult(playerName) {
+    if (!startTime || !currentImage) return;
+    
+    const elapsed = Date.now() - startTime;
+    const now = new Date();
+    
+    // 게임 결과 데이터
+    const gameResult = {
+        id: Date.now(), // 고유 ID
+        playerName: playerName || '익명',
+        imagePath: currentImage,
+        puzzleSize: `${ROWS}x${COLS}`,
+        completionTime: elapsed, // 밀리초
+        completionTimeFormatted: formatTime(elapsed),
+        date: now.toISOString(),
+        dateFormatted: now.toLocaleString('ko-KR', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        })
+    };
+    
+    // localStorage에서 기존 히스토리 가져오기
+    let history = JSON.parse(localStorage.getItem('puzzleGameHistory') || '[]');
+    
+    // 새 결과 추가 (최신순으로 정렬)
+    history.unshift(gameResult);
+    
+    // 최대 100개까지만 저장
+    if (history.length > 100) {
+        history = history.slice(0, 100);
+    }
+    
+    // localStorage에 저장
+    localStorage.setItem('puzzleGameHistory', JSON.stringify(history));
+    
+    // 저장 완료 메시지
+    alert('게임 결과가 저장되었습니다!');
+    
+    // 콘솔에 저장된 모든 게임 결과 출력
+    console.log('=== 저장된 게임 결과 (전체) ===');
+    console.log('총 저장된 게임 수:', history.length);
+    console.log('저장된 게임 결과:', history);
+    console.log('==============================');
+    
+    // 저장 팝업 닫기
+    saveResultPopup.classList.add('hidden');
+    completionPopup.classList.add('hidden');
+    
+    // 히스토리 표시
+    displayHistory();
+}
+
+// 저장 확인 버튼
+if (confirmSaveBtn) {
+    confirmSaveBtn.addEventListener('click', () => {
+        const name = playerNameInput.value.trim();
+        if (name) {
+            saveGameResult(name);
+        } else {
+            alert('이름을 입력해주세요.');
+            playerNameInput.focus();
+        }
+    });
+}
+
+// Enter 키로 저장
+if (playerNameInput) {
+    playerNameInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            confirmSaveBtn.click();
+        }
+    });
+}
+
+// 히스토리 표시 함수
+function displayHistory() {
+    const history = JSON.parse(localStorage.getItem('puzzleGameHistory') || '[]');
+    
+    // 콘솔에 저장된 모든 게임 결과 출력
+    console.log('=== 저장된 게임 결과 (히스토리 표시 시) ===');
+    console.log('총 저장된 게임 수:', history.length);
+    if (history.length > 0) {
+        console.log('저장된 게임 결과:', history);
+        console.log('상세 정보:');
+        history.forEach((result, index) => {
+            console.log(`[${index + 1}]`, {
+                이름: result.playerName,
+                퍼즐크기: result.puzzleSize,
+                완성시간: result.completionTimeFormatted,
+                날짜: result.dateFormatted,
+                이미지경로: result.imagePath
+            });
+        });
+    } else {
+        console.log('저장된 게임 결과가 없습니다.');
+    }
+    console.log('==========================================');
+    
+    if (history.length === 0) {
+        historyContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">저장된 게임 결과가 없습니다.</p>';
+        gameHistorySection.classList.add('hidden');
+        return;
+    }
+    
+    // 히스토리 섹션 표시
+    gameHistorySection.classList.remove('hidden');
+    
+    // 히스토리 컨테이너 초기화
+    historyContainer.innerHTML = '';
+    
+    // 히스토리 항목 생성
+    history.forEach((result, index) => {
+        const historyItem = document.createElement('div');
+        historyItem.classList.add('history-item');
+        
+        // 이미지 썸네일 생성
+        const thumbnail = document.createElement('img');
+        thumbnail.src = result.imagePath;
+        thumbnail.alt = '게임 이미지';
+        thumbnail.classList.add('history-thumbnail');
+        
+        // 정보 영역
+        const infoDiv = document.createElement('div');
+        infoDiv.classList.add('history-info');
+        
+        const nameDiv = document.createElement('div');
+        nameDiv.classList.add('history-name');
+        nameDiv.textContent = result.playerName;
+        
+        const detailsDiv = document.createElement('div');
+        detailsDiv.classList.add('history-details');
+        detailsDiv.innerHTML = `
+            <div>퍼즐 크기: ${result.puzzleSize}</div>
+            <div>완성 시간: ${result.completionTimeFormatted}</div>
+            <div>날짜: ${result.dateFormatted}</div>
+        `;
+        
+        infoDiv.appendChild(nameDiv);
+        infoDiv.appendChild(detailsDiv);
+        
+        historyItem.appendChild(thumbnail);
+        historyItem.appendChild(infoDiv);
+        
+        historyContainer.appendChild(historyItem);
+    });
+}
+
+// 페이지 로드 시 히스토리 표시 (기존 load 이벤트와 함께 실행)
+setTimeout(() => {
+    displayHistory();
+}, 200);
 

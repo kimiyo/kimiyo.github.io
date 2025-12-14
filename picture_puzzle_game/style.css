@@ -359,6 +359,13 @@ h1 {
     font-weight: bold;
 }
 
+.current-completion-time {
+    font-size: 1.1rem;
+    color: var(--primary-color);
+    margin: 10px 0 20px;
+    font-weight: bold;
+}
+
 .popup-content .btn.primary {
     background-color: var(--primary-color);
     color: white;
@@ -585,7 +592,208 @@ h1 {
         flex-direction: column;
     }
     
-    .popup-buttons .btn {
-        width: 100%;
+.popup-buttons .btn {
+    width: 100%;
+}
+}
+
+/* 게임 결과 저장 팝업 스타일 */
+.name-input {
+    width: 100%;
+    padding: 12px;
+    font-size: 1.1rem;
+    font-family: 'Jua', sans-serif;
+    border: 2px solid var(--primary-color);
+    border-radius: 8px;
+    box-sizing: border-box;
+    margin-bottom: 15px;
+}
+
+.name-input:focus {
+    outline: none;
+    border-color: #357abd;
+    box-shadow: 0 0 5px rgba(74, 144, 226, 0.3);
+}
+
+/* 같은 이미지 히스토리 스타일 */
+.same-image-history {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 2px solid #e0e0e0;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.same-image-history h3 {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.same-image-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.same-image-history-item {
+    background-color: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+.same-image-history-info {
+    display: grid;
+    grid-template-columns: 60px 1fr 100px 120px;
+    gap: 10px;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.same-image-history-size {
+    font-weight: bold;
+    color: var(--primary-color);
+    font-size: 1rem;
+}
+
+.same-image-history-name {
+    color: #333;
+    font-weight: 500;
+}
+
+.same-image-history-time {
+    color: #666;
+    text-align: right;
+    font-family: 'Courier New', monospace;
+}
+
+.same-image-history-date {
+    color: #999;
+    text-align: right;
+    font-size: 0.85rem;
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+    .same-image-history-info {
+        grid-template-columns: 50px 1fr;
+        gap: 5px;
+    }
+    
+    .same-image-history-time,
+    .same-image-history-date {
+        grid-column: 2;
+        text-align: left;
+        font-size: 0.8rem;
+    }
+}
+
+/* 게임 히스토리 섹션 */
+.game-history-section {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: white;
+    border-radius: 20px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    max-width: 1200px;
+    width: 95%;
+}
+
+.game-history-section h2 {
+    font-size: 1.8rem;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.history-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    max-height: 600px;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.history-item {
+    display: flex;
+    gap: 15px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    border: 2px solid #e0e0e0;
+    transition: all 0.2s;
+}
+
+.history-item:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.history-thumbnail {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 2px solid #ddd;
+    flex-shrink: 0;
+}
+
+.history-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.history-name {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.history-details {
+    font-size: 0.9rem;
+    color: #666;
+    line-height: 1.6;
+}
+
+.history-details div {
+    margin-bottom: 4px;
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+    .game-history-section {
+        padding: 15px;
+        margin-top: 20px;
+    }
+    
+    .game-history-section h2 {
+        font-size: 1.5rem;
+    }
+    
+    .history-container {
+        grid-template-columns: 1fr;
+        gap: 15px;
+        max-height: 500px;
+    }
+    
+    .history-item {
+        padding: 12px;
+    }
+    
+    .history-thumbnail {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .history-name {
+        font-size: 1.1rem;
+    }
+    
+    .history-details {
+        font-size: 0.85rem;
     }
 }
