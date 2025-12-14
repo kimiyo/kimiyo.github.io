@@ -10,12 +10,28 @@ const completionPopup = document.getElementById('completion-popup');
 const finalTimeEl = document.getElementById('final-time');
 const closePopupBtn = document.getElementById('close-popup');
 
+// 이미지 선택 팝업 관련 요소
+const imageSelectPopup = document.getElementById('image-select-popup');
+const startGameBtn = document.getElementById('start-game-btn');
+const cancelPopupBtn = document.getElementById('cancel-popup-btn');
+const imageListContainer = document.getElementById('image-list-container');
+const imageGrid = document.getElementById('image-grid');
+const imageUploadContainer = document.getElementById('image-upload-container');
+const imageUploadInput = document.getElementById('image-upload-input');
+const imageUploadBtn = document.getElementById('image-upload-btn');
+const uploadPreview = document.getElementById('upload-preview');
+const puzzleRowsInput = document.getElementById('puzzle-rows');
+const puzzleColsInput = document.getElementById('puzzle-cols');
+
+let selectedImagePath = '';
+let uploadedImageFile = null;
+
 let startTime = null;
 let timerInterval = null;
 let isGameComplete = false;
 
-const ROWS = 4;
-const COLS = 4;
+let ROWS = 4;
+let COLS = 4;
 
 // CSS 변수에서 크기를 가져오는 함수
 function getTileSize() {
@@ -23,7 +39,7 @@ function getTileSize() {
     if (board) {
         const computedStyle = window.getComputedStyle(board);
         const boardSize = parseFloat(computedStyle.width);
-        return boardSize / 4; // 4x4 그리드이므로
+        return boardSize / COLS; // 동적 그리드 크기
     }
     return 100; // 기본값
 }
@@ -193,6 +209,10 @@ function changeToRandomImage() {
 function createBoard() {
     board.innerHTML = '';
     dropZones = [];
+
+    // CSS 그리드 템플릿 동적 설정
+    board.style.gridTemplateColumns = `repeat(${COLS}, 1fr)`;
+    board.style.gridTemplateRows = `repeat(${ROWS}, 1fr)`;
 
     // Create drop zones (grid slots)
     // The board uses CSS grid, so we just append divs.
@@ -431,7 +451,169 @@ resetBtn.addEventListener('click', () => {
     }
 });
 
-changeImageBtn.addEventListener('click', changeToRandomImage);
+// 이미지 선택 팝업 표시
+function showImageSelectPopup() {
+    // 기본값 설정
+    selectedImagePath = '';
+    uploadedImageFile = null;
+    puzzleRowsInput.value = '4';
+    puzzleColsInput.value = '4';
+    
+    // 라디오 버튼 초기화 (랜덤 선택)
+    document.querySelector('input[name="image-source"][value="random"]').checked = true;
+    imageListContainer.classList.add('hidden');
+    imageUploadContainer.classList.add('hidden');
+    uploadPreview.classList.add('hidden');
+    
+    // 이미지 목록 생성
+    populateImageList();
+    
+    imageSelectPopup.classList.remove('hidden');
+}
+
+// 이미지 목록 채우기
+function populateImageList() {
+    imageGrid.innerHTML = '';
+    availableImages.forEach((imagePath, index) => {
+        const imageItem = document.createElement('div');
+        imageItem.classList.add('image-item');
+        imageItem.dataset.imagePath = imagePath;
+        
+        const img = document.createElement('img');
+        img.src = imagePath;
+        img.alt = `이미지 ${index + 1}`;
+        
+        const imageName = document.createElement('div');
+        imageName.classList.add('image-name');
+        // 파일명에서 확장자 제거
+        const fileName = imagePath.split('/').pop().replace(/\.[^/.]+$/, '');
+        imageName.textContent = fileName;
+        
+        imageItem.appendChild(img);
+        imageItem.appendChild(imageName);
+        
+        imageItem.addEventListener('click', () => {
+            // 다른 항목 선택 해제
+            document.querySelectorAll('.image-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            imageItem.classList.add('selected');
+            selectedImagePath = imagePath;
+        });
+        
+        imageGrid.appendChild(imageItem);
+    });
+}
+
+// 이미지 소스 라디오 버튼 이벤트
+document.querySelectorAll('input[name="image-source"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+        const value = e.target.value;
+        imageListContainer.classList.add('hidden');
+        imageUploadContainer.classList.add('hidden');
+        uploadPreview.classList.add('hidden');
+        selectedImagePath = '';
+        uploadedImageFile = null;
+        
+        if (value === 'list') {
+            imageListContainer.classList.remove('hidden');
+        } else if (value === 'upload') {
+            imageUploadContainer.classList.remove('hidden');
+        }
+    });
+});
+
+// 이미지 업로드 버튼 클릭
+imageUploadBtn.addEventListener('click', () => {
+    imageUploadInput.click();
+});
+
+// 이미지 업로드 처리
+imageUploadInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+        uploadedImageFile = file;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            uploadPreview.innerHTML = `<img src="${event.target.result}" alt="업로드된 이미지">`;
+            uploadPreview.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// 팝업 닫기
+cancelPopupBtn.addEventListener('click', () => {
+    imageSelectPopup.classList.add('hidden');
+});
+
+// 팝업 외부 클릭 시 닫기
+imageSelectPopup.addEventListener('click', (e) => {
+    if (e.target === imageSelectPopup) {
+        imageSelectPopup.classList.add('hidden');
+    }
+});
+
+// 시작하기 버튼 클릭
+startGameBtn.addEventListener('click', () => {
+    const imageSource = document.querySelector('input[name="image-source"]:checked').value;
+    let imageToUse = '';
+    
+    // 이미지 선택 확인
+    if (imageSource === 'random') {
+        // 랜덤 이미지 선택
+        const randomIndex = Math.floor(Math.random() * availableImages.length);
+        imageToUse = availableImages[randomIndex];
+    } else if (imageSource === 'list') {
+        if (!selectedImagePath) {
+            alert('이미지를 선택해주세요.');
+            return;
+        }
+        imageToUse = selectedImagePath;
+    } else if (imageSource === 'upload') {
+        if (!uploadedImageFile) {
+            alert('이미지를 업로드해주세요.');
+            return;
+        }
+        // 업로드된 이미지를 Data URL로 사용
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            imageToUse = event.target.result;
+            startNewGame(imageToUse);
+        };
+        reader.readAsDataURL(uploadedImageFile);
+        return; // 비동기 처리이므로 여기서 return
+    }
+    
+    startNewGame(imageToUse);
+});
+
+// 새 게임 시작
+function startNewGame(imagePath) {
+    // 퍼즐 크기 설정
+    ROWS = parseInt(puzzleRowsInput.value) || 4;
+    COLS = parseInt(puzzleColsInput.value) || 4;
+    
+    // 유효성 검사
+    if (ROWS < 2 || ROWS > 10 || COLS < 2 || COLS > 10) {
+        alert('퍼즐 크기는 2x2부터 10x10까지 가능합니다.');
+        return;
+    }
+    
+    // 팝업 닫기
+    imageSelectPopup.classList.add('hidden');
+    
+    // 기존 퍼즐 조각 제거
+    const existingPieces = document.querySelectorAll('.piece');
+    existingPieces.forEach(p => p.remove());
+    pieces = [];
+    messageEl.textContent = '';
+    
+    // 새 게임 시작
+    initGame(imagePath);
+}
+
+changeImageBtn.addEventListener('click', showImageSelectPopup);
 
 // 페이지 로드 시 자동으로 랜덤 이미지 선택 후 게임 시작
 window.addEventListener('load', () => {
@@ -461,4 +643,9 @@ window.addEventListener('resize', () => {
         }
     }, 250);
 });
+
+// changeToRandomImage 함수는 더 이상 사용되지 않지만 호환성을 위해 유지
+function changeToRandomImage() {
+    showImageSelectPopup();
+}
 

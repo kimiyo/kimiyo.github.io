@@ -41,6 +41,68 @@
         </div>
     </div>
 
+    <!-- 이미지 선택 팝업 -->
+    <div id="image-select-popup" class="completion-popup hidden">
+        <div class="popup-content image-select-popup-content">
+            <h2>새 게임 시작하기</h2>
+            
+            <!-- 이미지 선택 섹션 -->
+            <div class="popup-section">
+                <h3>그림 선택</h3>
+                <div class="image-option-group">
+                    <label class="radio-label">
+                        <input type="radio" name="image-source" value="random" checked>
+                        <span>랜덤하게 다른 그림 선택</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="image-source" value="list">
+                        <span>이미지 목록에서 선택</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="image-source" value="upload">
+                        <span>내 이미지 업로드</span>
+                    </label>
+                </div>
+                
+                <!-- 이미지 목록 선택 -->
+                <div id="image-list-container" class="image-list-container hidden">
+                    <div class="image-grid" id="image-grid">
+                        <!-- 이미지 목록이 여기에 동적으로 추가됩니다 -->
+                    </div>
+                </div>
+                
+                <!-- 이미지 업로드 -->
+                <div id="image-upload-container" class="image-upload-container hidden">
+                    <input type="file" id="image-upload-input" accept="image/*" style="display: none;">
+                    <button type="button" id="image-upload-btn" class="btn secondary">이미지 선택</button>
+                    <div id="upload-preview" class="upload-preview hidden"></div>
+                </div>
+            </div>
+            
+            <!-- 퍼즐 크기 선택 섹션 -->
+            <div class="popup-section">
+                <h3>퍼즐 크기</h3>
+                <div class="puzzle-size-selector">
+                    <label>
+                        가로: 
+                        <input type="number" id="puzzle-cols" min="2" max="10" value="4" class="size-input">
+                    </label>
+                    <span class="size-separator">×</span>
+                    <label>
+                        세로: 
+                        <input type="number" id="puzzle-rows" min="2" max="10" value="4" class="size-input">
+                    </label>
+                </div>
+            </div>
+            
+            <!-- 버튼 -->
+            <div class="popup-buttons">
+                <button id="start-game-btn" class="btn primary">시작하기</button>
+                <button id="cancel-popup-btn" class="btn secondary">취소</button>
+            </div>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 
