@@ -30,6 +30,31 @@
   const yearEl = document.getElementById('year');
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
+  // Mobile menu toggle
+  const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+  const navLinks = document.getElementById('nav-links');
+  
+  if (mobileMenuToggle && navLinks) {
+    mobileMenuToggle.addEventListener('click', () => {
+      navLinks.classList.toggle('active');
+      const isOpen = navLinks.classList.contains('active');
+      mobileMenuToggle.setAttribute('aria-label', isOpen ? '메뉴 닫기' : '메뉴 열기');
+      mobileMenuToggle.textContent = isOpen ? '✕' : '☰';
+    });
+    
+    // 메뉴 링크 클릭 시 모바일에서 메뉴 닫기
+    const menuLinks = navLinks.querySelectorAll('a');
+    menuLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        if (window.innerWidth <= 768) {
+          navLinks.classList.remove('active');
+          mobileMenuToggle.setAttribute('aria-label', '메뉴 열기');
+          mobileMenuToggle.textContent = '☰';
+        }
+      });
+    });
+  }
+
   // Theme toggle
   initTheme();
   const btn = document.getElementById('theme-toggle');

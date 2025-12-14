@@ -178,6 +178,99 @@ body {
   color: var(--text);
 }
 
+/* Mobile menu toggle button */
+.mobile-menu-toggle {
+  display: none;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 6px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  margin-left: auto;
+}
+.mobile-menu-toggle:hover {
+  color: var(--text);
+}
+
+/* Mobile menu styles */
+@media (max-width: 768px) {
+  .mobile-menu-toggle {
+    display: block;
+  }
+  
+  .nav-links {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    background: color-mix(in oklab, var(--card) 95%, transparent);
+    backdrop-filter: blur(8px);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    margin: 0;
+    padding: 16px 20px;
+    gap: 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+    transition: max-height 0.3s ease, opacity 0.3s ease, visibility 0.3s ease;
+    z-index: 1000;
+  }
+  
+  .nav-links.active {
+    max-height: 500px;
+    opacity: 1;
+    visibility: visible;
+  }
+  
+  .nav-links li {
+    width: 100%;
+    border-bottom: 1px solid var(--border);
+  }
+  
+  .nav-links li:last-child {
+    border-bottom: none;
+  }
+  
+  .nav-links a {
+    display: block;
+    padding: 12px 0;
+    width: 100%;
+  }
+  
+  /* Mobile dropdown menu */
+  .nav-links .dropdown-menu {
+    position: static;
+    margin-top: 0;
+    margin-left: 16px;
+    margin-bottom: 8px;
+    min-width: auto;
+    width: calc(100% - 32px);
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    box-shadow: none;
+    border: none;
+    border-top: 1px solid var(--border);
+    border-radius: 0;
+  }
+  
+  .nav-links .dropdown:hover .dropdown-menu,
+  .nav-links .dropdown:focus-within .dropdown-menu {
+    transform: none;
+  }
+  
+  .theme-toggle {
+    margin-left: 8px;
+  }
+}
+
 .site-main {
   max-width: 1040px;
   margin: 0 auto;
