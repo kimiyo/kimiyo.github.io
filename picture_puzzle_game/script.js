@@ -7,8 +7,26 @@ const controls = document.getElementById('controls');
 
 const ROWS = 4;
 const COLS = 4;
-const TILE_SIZE = 100; // px
-const BOARD_SIZE = 400; // px
+
+// CSS 변수에서 크기를 가져오는 함수
+function getTileSize() {
+    const board = document.getElementById('board');
+    if (board) {
+        const computedStyle = window.getComputedStyle(board);
+        const boardSize = parseFloat(computedStyle.width);
+        return boardSize / 4; // 4x4 그리드이므로
+    }
+    return 100; // 기본값
+}
+
+function getBoardSize() {
+    const board = document.getElementById('board');
+    if (board) {
+        const computedStyle = window.getComputedStyle(board);
+        return parseFloat(computedStyle.width);
+    }
+    return 400; // 기본값
+}
 
 // 사용 가능한 이미지 목록
 const availableImages = [
@@ -86,10 +104,13 @@ function createPieces(imagePath) {
         // Background image 설정
         piece.style.backgroundImage = `url('${imagePath}')`;
         
-        // Background positioning
-        const bgX = -(c * TILE_SIZE);
-        const bgY = -(r * TILE_SIZE);
+        // Background positioning - 동적 크기 사용
+        const tileSize = getTileSize();
+        const boardSize = getBoardSize();
+        const bgX = -(c * tileSize);
+        const bgY = -(r * tileSize);
         piece.style.backgroundPosition = `${bgX}px ${bgY}px`;
+        piece.style.backgroundSize = `${boardSize}px ${boardSize}px`;
 
         piece.dataset.value = i;
 
@@ -108,10 +129,13 @@ function scatterPieces() {
     const areaWidth = gameArea.offsetWidth;
     const areaHeight = gameArea.offsetHeight;
     
+    // 동적 타일 크기 가져오기
+    const tileSize = getTileSize();
+    
     // Define the range for random position
     // Available width/height minus piece size
-    const maxX = Math.max(0, areaWidth - TILE_SIZE);
-    const maxY = Math.max(0, areaHeight - TILE_SIZE);
+    const maxX = Math.max(0, areaWidth - tileSize);
+    const maxY = Math.max(0, areaHeight - tileSize);
 
     pieces.forEach(piece => {
         // Reset state
@@ -205,8 +229,9 @@ function checkDrop(piece) {
 
         // Simple distance check to find nearest zone if overlapping
         const dist = Math.hypot(pieceCenter.x - zoneCenter.x, pieceCenter.y - zoneCenter.y);
+        const tileSize = getTileSize();
 
-        if (dist < TILE_SIZE / 2) { // Threshold to snap
+        if (dist < tileSize / 2) { // Threshold to snap
             if (dist < minDistance) {
                 minDistance = dist;
                 droppedZone = zone;
@@ -286,4 +311,26 @@ window.addEventListener('load', () => {
     const randomIndex = Math.floor(Math.random() * availableImages.length);
     const randomImage = availableImages[randomIndex];
     initGame(randomImage);
+});
+
+// 창 크기 변경 시 퍼즐 조각 위치 재조정
+let resizeTimeout;
+window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+        if (currentImage && pieces.length > 0) {
+            // 배경 크기 재조정
+            const boardSize = getBoardSize();
+            const tileSize = getTileSize();
+            pieces.forEach((piece, i) => {
+                const r = Math.floor(i / COLS);
+                const c = i % COLS;
+                const bgX = -(c * tileSize);
+                const bgY = -(r * tileSize);
+                piece.style.backgroundSize = `${boardSize}px ${boardSize}px`;
+                piece.style.backgroundPosition = `${bgX}px ${bgY}px`;
+            });
+            scatterPieces();
+        }
+    }, 250);
 });

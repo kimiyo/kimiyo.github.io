@@ -6,6 +6,28 @@
     --text-color: #333;
 }
 
+/* 반응형 크기 조정 */
+@media (max-width: 900px) {
+    :root {
+        --board-size: min(90vw, 400px);
+        --tile-size: calc(var(--board-size) / 4);
+    }
+}
+
+@media (max-width: 600px) {
+    :root {
+        --board-size: min(85vw, 350px);
+        --tile-size: calc(var(--board-size) / 4);
+    }
+}
+
+@media (max-width: 400px) {
+    :root {
+        --board-size: min(90vw, 300px);
+        --tile-size: calc(var(--board-size) / 4);
+    }
+}
+
 body {
     font-family: 'Jua', sans-serif;
     background-color: var(--bg-color);
@@ -15,32 +37,42 @@ body {
     justify-content: center;
     min-height: 100vh;
     margin: 0;
+    padding: 10px;
     color: var(--text-color);
-    overflow: hidden;
-    /* Prevent scrolling while dragging */
+    overflow-x: hidden;
+    /* Prevent horizontal scrolling */
+    overflow-y: auto;
+    /* Allow vertical scrolling if needed */
 }
 
 .main-container {
     text-align: center;
     width: 100%;
-    height: 100vh;
+    max-width: 100vw;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
+    padding: 10px;
+    box-sizing: border-box;
 }
 
 h1 {
-    margin: 1rem 0;
+    margin: 0.5rem 0;
+    font-size: clamp(1.2rem, 4vw, 1.8rem);
     color: var(--primary-color);
     z-index: 10;
 }
 
 .game-area {
     position: relative;
-    width: 800px;
-    /* Wider area to allow scattering */
-    height: 600px;
+    width: min(800px, 95vw);
+    /* Wider area to allow scattering, but responsive */
+    height: min(600px, calc(95vw * 0.75));
+    max-width: 100vw;
+    max-height: calc(100vh - 200px);
+    /* Leave space for header and controls */
     background-color: #e0e7ef;
     border-radius: 20px;
     box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.1);
