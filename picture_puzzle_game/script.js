@@ -45,6 +45,10 @@ let startTime = null;
 let timerInterval = null;
 let isGameComplete = false;
 
+// 힌트 시스템 변수
+let hintLevel = 0; // 현재 힌트 단계 (0-3)
+let lastHintTime = 0; // 마지막 힌트 시간 (자동 리셋용)
+
 let ROWS = 4;
 let COLS = 4;
 
@@ -1747,6 +1751,12 @@ resetBtn.addEventListener('click', () => {
         stopTimer();
         startTimer(); // 리셋 시 타이머 재시작
         scatterPieces();
+
+        // 힌트 시스템 리셋
+        hintLevel = 0;
+        lastHintTime = 0;
+        clearHintEffects();
+        messageEl.textContent = '';
     }
 });
 
@@ -1758,16 +1768,22 @@ function showImageSelectPopup() {
     uploadedImageFileName = '';
     puzzleRowsInput.value = '4';
     puzzleColsInput.value = '4';
-    
+
     // 라디오 버튼 초기화 (랜덤 선택)
     document.querySelector('input[name="image-source"][value="random"]').checked = true;
     imageListContainer.classList.add('hidden');
     imageUploadContainer.classList.add('hidden');
     uploadPreview.classList.add('hidden');
-    
+
+    // 힌트 시스템 리셋
+    hintLevel = 0;
+    lastHintTime = 0;
+    clearHintEffects();
+    messageEl.textContent = '';
+
     // 이미지 목록 생성
     populateImageList();
-    
+
     imageSelectPopup.classList.remove('hidden');
 }
 
@@ -1921,7 +1937,8 @@ if (hintBtn) {
     hintBtn.addEventListener('click', showHint);
 }
 
-function showHint() {
+// 공통 함수: 틀린 조각 분석
+function getIncorrectPieces() {
     let correctCount = 0;
     let incorrectPieces = [];
 
@@ -1960,7 +1977,7 @@ function showHint() {
 
         const isCorrect = Math.abs(pieceLeft - expectedLeft) < 2 && Math.abs(pieceTop - expectedTop) < 2;
 
-        // 조각 중심과 올바른 zone 중심 간의 실제 거리 계산 (스냅 감지와 동일한 방식)
+        // 조각 중심과 올바른 zone 중심 간의 실제 거리 계산
         const pieceRect = piece.getBoundingClientRect();
         const pieceCenter = {
             x: pieceRect.left + pieceRect.width / 2,
@@ -1974,13 +1991,11 @@ function showHint() {
 
         if (isCorrect) {
             correctCount++;
-            // 올바른 조각: 초록색 테두리로 표시 (1초 후 제거)
-            piece.style.border = '3px solid #4CAF50';
-            piece.style.boxShadow = '0 0 15px rgba(76, 175, 80, 0.8)';
         } else {
             incorrectPieces.push({
                 piece,
                 pieceVal,
+                expectedZone,
                 current: { left: pieceLeft, top: pieceTop },
                 expected: { left: expectedLeft, top: expectedTop },
                 diff: {
@@ -1991,46 +2006,272 @@ function showHint() {
                 snapThreshold: snapThreshold,
                 canSnap: distanceToCorrectZone < snapThreshold
             });
-            // 잘못된 조각: 빨간색 테두리로 표시
+        }
+    });
+
+    const totalPieces = ROWS * COLS;
+    return { correctCount, incorrectPieces, totalPieces };
+}
+
+// 힌트 레벨 0: 개수만 표시
+function showHintLevel0(data) {
+    const { correctCount, incorrectPieces, totalPieces } = data;
+
+    messageEl.textContent = `💡 힌트 1단계: ${correctCount}개 맞음, ${incorrectPieces.length}개 틀림`;
+    messageEl.style.color = '#2196F3';
+
+    if (incorrectPieces.length > 0) {
+        messageEl.textContent += ' (다시 클릭하면 틀린 조각을 보여줍니다)';
+    }
+}
+
+// 힌트 레벨 1: 틀린 조각 강조
+function showHintLevel1(data) {
+    const { correctCount, incorrectPieces, totalPieces } = data;
+
+    pieces.forEach(piece => {
+        const pieceVal = parseInt(piece.dataset.value);
+        const pieceLeft = Math.round(parseFloat(piece.style.left));
+        const pieceTop = Math.round(parseFloat(piece.style.top));
+
+        const expectedZone = dropZones[pieceVal];
+        const gameAreaRect = gameArea.getBoundingClientRect();
+        const zoneRect = expectedZone.getBoundingClientRect();
+
+        const boundaryPath = piece._boundaryPath;
+        let expectedLeft, expectedTop;
+
+        if (!boundaryPath || boundaryPath.length === 0) {
+            expectedLeft = Math.round(zoneRect.left - gameAreaRect.left);
+            expectedTop = Math.round(zoneRect.top - gameAreaRect.top);
+        } else {
+            const minX = Math.floor(Math.min(...boundaryPath.map(p => p.x)));
+            const minY = Math.floor(Math.min(...boundaryPath.map(p => p.y)));
+
+            const tileSize = getTileSize();
+            const row = parseInt(expectedZone.dataset.row);
+            const col = parseInt(expectedZone.dataset.col);
+            const tileOriginX = col * tileSize;
+            const tileOriginY = row * tileSize;
+
+            const offsetX = minX - tileOriginX;
+            const offsetY = minY - tileOriginY;
+
+            expectedLeft = Math.round((zoneRect.left - gameAreaRect.left) + offsetX);
+            expectedTop = Math.round((zoneRect.top - gameAreaRect.top) + offsetY);
+        }
+
+        const isCorrect = Math.abs(pieceLeft - expectedLeft) < 2 && Math.abs(pieceTop - expectedTop) < 2;
+
+        if (isCorrect) {
+            piece.style.border = '3px solid #4CAF50';
+            piece.style.boxShadow = '0 0 15px rgba(76, 175, 80, 0.8)';
+        } else {
             piece.style.border = '3px solid #f44336';
             piece.style.boxShadow = '0 0 15px rgba(244, 67, 54, 0.8)';
         }
     });
 
-    // 메시지 표시
-    const totalPieces = ROWS * COLS;
-    if (correctCount === totalPieces) {
-        messageEl.textContent = `🎉 완벽합니다! 모든 조각이 올바른 위치에 있습니다! (${correctCount}/${totalPieces})`;
-        messageEl.style.color = '#4CAF50';
-    } else {
-        messageEl.textContent = `💡 힌트: ${correctCount}개 맞음, ${totalPieces - correctCount}개 틀림 (빨간색 테두리 = 잘못된 위치)`;
-        messageEl.style.color = '#f44336';
+    messageEl.textContent = `💡 힌트 2단계: 빨간색 = 잘못된 위치 (${incorrectPieces.length}개)`;
+    messageEl.style.color = '#2196F3';
 
-        // 상세 로그 출력
-        console.log('🔍 힌트 - 잘못 배치된 조각:', incorrectPieces);
-        if (incorrectPieces.length > 0) {
-            console.log(`📏 스냅 임계값: ${incorrectPieces[0].snapThreshold.toFixed(1)}px (타일 크기의 1/3)`);
-        }
-        incorrectPieces.forEach(info => {
-            console.log(`조각 #${info.pieceVal}:`, {
-                현재위치: `(${info.current.left}, ${info.current.top})`,
-                올바른위치: `(${info.expected.left}, ${info.expected.top})`,
-                위치차이: `(${info.diff.left}, ${info.diff.top})`,
-                '중심간_거리': `${info.distanceToCorrectZone.toFixed(1)}px`,
-                '스냅_임계값': `${info.snapThreshold.toFixed(1)}px`,
-                '스냅가능': info.canSnap ? '✅ 예 (놓으면 자동으로 맞춰짐)' : `❌ 아니오 (${(info.distanceToCorrectZone - info.snapThreshold).toFixed(1)}px 더 가까이 놓아야 함)`
-            });
-        });
+    if (incorrectPieces.length > 0) {
+        messageEl.textContent += ' (다시 클릭하면 한 조각의 올바른 위치를 보여줍니다)';
+    }
+}
+
+// 힌트 레벨 2: 한 조각의 목표 위치 표시
+function showHintLevel2(data) {
+    const { incorrectPieces } = data;
+
+    if (incorrectPieces.length === 0) return;
+
+    const targetPiece = incorrectPieces[0];
+    const targetZone = targetPiece.expectedZone;
+
+    // 선택된 조각 강조 (노란색 펄스)
+    targetPiece.piece.style.border = '4px solid #FFD700';
+    targetPiece.piece.style.boxShadow = '0 0 25px rgba(255, 215, 0, 0.9)';
+    targetPiece.piece.style.animation = 'pulse 1s infinite';
+
+    // 목표 zone 강조 (초록색 펄스)
+    targetZone.style.border = '4px dashed #4CAF50';
+    targetZone.style.boxShadow = 'inset 0 0 25px rgba(76, 175, 80, 0.5)';
+    targetZone.style.animation = 'pulse 1s infinite';
+
+    // 연결선 그리기
+    drawConnectionLine(targetPiece.piece, targetZone);
+
+    messageEl.textContent = `💡 힌트 3단계: 노란색 조각을 초록색 위치로! (다시 클릭하면 자동 배치)`;
+    messageEl.style.color = '#FFD700';
+}
+
+// 힌트 레벨 3: 자동 배치
+function showHintLevel3(data) {
+    const { incorrectPieces } = data;
+
+    if (incorrectPieces.length === 0) return;
+
+    const targetPiece = incorrectPieces[0];
+    const targetZone = targetPiece.expectedZone;
+
+    // 애니메이션과 함께 자동 배치
+    animateToPosition(targetPiece.piece, targetZone, () => {
+        snapToZone(targetPiece.piece, targetZone);
+        checkWin();
+    });
+
+    messageEl.textContent = `✨ 한 조각이 자동으로 배치되었습니다!`;
+    messageEl.style.color = '#4CAF50';
+
+    // 힌트 레벨 리셋
+    hintLevel = 0;
+}
+
+// 힌트 효과 제거
+function clearHintEffects() {
+    pieces.forEach(piece => {
+        piece.style.border = '';
+        piece.style.boxShadow = '';
+        piece.style.animation = '';
+    });
+
+    dropZones.forEach(zone => {
+        zone.style.border = '';
+        zone.style.boxShadow = '';
+        zone.style.animation = '';
+    });
+
+    removeConnectionLine();
+}
+
+// 연결선 그리기
+function drawConnectionLine(fromElement, toElement) {
+    removeConnectionLine();
+
+    const fromRect = fromElement.getBoundingClientRect();
+    const toRect = toElement.getBoundingClientRect();
+    const gameAreaRect = gameArea.getBoundingClientRect();
+
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.id = 'hint-connection-line';
+    svg.style.position = 'absolute';
+    svg.style.top = '0';
+    svg.style.left = '0';
+    svg.style.width = '100%';
+    svg.style.height = '100%';
+    svg.style.pointerEvents = 'none';
+    svg.style.zIndex = '9999';
+
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', fromRect.left + fromRect.width / 2 - gameAreaRect.left);
+    line.setAttribute('y1', fromRect.top + fromRect.height / 2 - gameAreaRect.top);
+    line.setAttribute('x2', toRect.left + toRect.width / 2 - gameAreaRect.left);
+    line.setAttribute('y2', toRect.top + toRect.height / 2 - gameAreaRect.top);
+    line.setAttribute('stroke', '#FFD700');
+    line.setAttribute('stroke-width', '3');
+    line.setAttribute('stroke-dasharray', '10,5');
+
+    const animate = document.createElementNS('http://www.w3.org/2000/svg', 'animate');
+    animate.setAttribute('attributeName', 'stroke-dashoffset');
+    animate.setAttribute('from', '0');
+    animate.setAttribute('to', '30');
+    animate.setAttribute('dur', '1s');
+    animate.setAttribute('repeatCount', 'indefinite');
+
+    line.appendChild(animate);
+    svg.appendChild(line);
+    gameArea.appendChild(svg);
+}
+
+// 연결선 제거
+function removeConnectionLine() {
+    const existingLine = document.getElementById('hint-connection-line');
+    if (existingLine) {
+        existingLine.remove();
+    }
+}
+
+// 애니메이션 이동
+function animateToPosition(piece, targetZone, callback) {
+    const gameAreaRect = gameArea.getBoundingClientRect();
+    const zoneRect = targetZone.getBoundingClientRect();
+    const boundaryPath = piece._boundaryPath;
+
+    let targetLeft, targetTop;
+
+    if (!boundaryPath || boundaryPath.length === 0) {
+        targetLeft = Math.round(zoneRect.left - gameAreaRect.left);
+        targetTop = Math.round(zoneRect.top - gameAreaRect.top);
+    } else {
+        const minX = Math.floor(Math.min(...boundaryPath.map(p => p.x)));
+        const minY = Math.floor(Math.min(...boundaryPath.map(p => p.y)));
+        const tileSize = getTileSize();
+        const row = parseInt(targetZone.dataset.row);
+        const col = parseInt(targetZone.dataset.col);
+        const tileOriginX = col * tileSize;
+        const tileOriginY = row * tileSize;
+        const offsetX = minX - tileOriginX;
+        const offsetY = minY - tileOriginY;
+        targetLeft = Math.round((zoneRect.left - gameAreaRect.left) + offsetX);
+        targetTop = Math.round((zoneRect.top - gameAreaRect.top) + offsetY);
     }
 
-    // 3초 후 테두리 제거
+    piece.style.transition = 'all 0.5s ease-in-out';
+    piece.style.left = `${targetLeft}px`;
+    piece.style.top = `${targetTop}px`;
+
     setTimeout(() => {
-        pieces.forEach(piece => {
-            piece.style.border = '';
-            piece.style.boxShadow = '';
-        });
-        messageEl.textContent = '';
-    }, 3000);
+        piece.style.transition = '';
+        if (callback) callback();
+    }, 500);
+}
+
+// 메인 힌트 함수
+function showHint() {
+    const now = Date.now();
+
+    // 10초 이상 지나면 힌트 레벨 리셋
+    if (now - lastHintTime > 10000) {
+        hintLevel = 0;
+    }
+    lastHintTime = now;
+
+    // 이전 힌트 효과 제거
+    clearHintEffects();
+
+    // 현재 상태 분석
+    const data = getIncorrectPieces();
+
+    // 모두 맞춘 경우
+    if (data.incorrectPieces.length === 0) {
+        messageEl.textContent = '🎉 완벽합니다! 모든 조각이 올바른 위치에 있습니다!';
+        messageEl.style.color = '#4CAF50';
+        hintLevel = 0;
+        return;
+    }
+
+    // 단계별 힌트 실행
+    switch(hintLevel) {
+        case 0:
+            showHintLevel0(data);
+            break;
+        case 1:
+            showHintLevel1(data);
+            break;
+        case 2:
+            showHintLevel2(data);
+            break;
+        case 3:
+            showHintLevel3(data);
+            return; // level 3에서 리셋됨
+    }
+
+    // 다음 단계로
+    hintLevel++;
+
+    // 3초 후 시각 효과 제거 (레벨은 유지)
+    setTimeout(clearHintEffects, 3000);
 }
 
 // 경계선 검증 보기 버튼
