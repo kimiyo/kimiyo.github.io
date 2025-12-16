@@ -1556,28 +1556,32 @@ function checkDrop(piece) {
         y: pieceRect.top + pieceRect.height / 2
     };
 
-    // Find if the center is within any drop zone
+    // Find if the center is within the CORRECT drop zone
+    // 조각은 자신의 올바른 위치에만 스냅됨 (더 현실적인 게임플레이)
     let droppedZone = null;
-    let minDistance = Infinity;
+    const pieceVal = parseInt(piece.dataset.value);
+    const correctZone = dropZones[pieceVal]; // 이 조각이 속해야 하는 올바른 zone
 
-    dropZones.forEach(zone => {
-        const zoneRect = zone.getBoundingClientRect();
+    if (correctZone) {
+        const zoneRect = correctZone.getBoundingClientRect();
         const zoneCenter = {
             x: zoneRect.left + zoneRect.width / 2,
             y: zoneRect.top + zoneRect.height / 2
         };
 
-        // Simple distance check to find nearest zone if overlapping
+        // 올바른 zone과의 거리 체크
         const dist = Math.hypot(pieceCenter.x - zoneCenter.x, pieceCenter.y - zoneCenter.y);
         const tileSize = getTileSize();
 
-        if (dist < tileSize / 2) { // Threshold to snap
-            if (dist < minDistance) {
-                minDistance = dist;
-                droppedZone = zone;
-            }
+        // 스냅 거리를 타일 크기의 1/3로 제한 (더 정확한 배치 요구)
+        // 예: 100px 타일 -> 약 33px 이내에서만 스냅
+        const snapThreshold = tileSize / 3;
+
+        // 올바른 위치 근처에 있을 때만 스냅
+        if (dist < snapThreshold) {
+            droppedZone = correctZone;
         }
-    });
+    }
 
     if (droppedZone) {
         snapToZone(piece, droppedZone);
@@ -1956,6 +1960,18 @@ function showHint() {
 
         const isCorrect = Math.abs(pieceLeft - expectedLeft) < 2 && Math.abs(pieceTop - expectedTop) < 2;
 
+        // 조각 중심과 올바른 zone 중심 간의 실제 거리 계산 (스냅 감지와 동일한 방식)
+        const pieceRect = piece.getBoundingClientRect();
+        const pieceCenter = {
+            x: pieceRect.left + pieceRect.width / 2,
+            y: pieceRect.top + pieceRect.height / 2
+        };
+        const zoneCenterX = zoneRect.left + zoneRect.width / 2;
+        const zoneCenterY = zoneRect.top + zoneRect.height / 2;
+        const distanceToCorrectZone = Math.hypot(pieceCenter.x - zoneCenterX, pieceCenter.y - zoneCenterY);
+        const tileSize = getTileSize();
+        const snapThreshold = tileSize / 3;
+
         if (isCorrect) {
             correctCount++;
             // 올바른 조각: 초록색 테두리로 표시 (1초 후 제거)
@@ -1970,7 +1986,10 @@ function showHint() {
                 diff: {
                     left: pieceLeft - expectedLeft,
                     top: pieceTop - expectedTop
-                }
+                },
+                distanceToCorrectZone: distanceToCorrectZone,
+                snapThreshold: snapThreshold,
+                canSnap: distanceToCorrectZone < snapThreshold
             });
             // 잘못된 조각: 빨간색 테두리로 표시
             piece.style.border = '3px solid #f44336';
@@ -1989,11 +2008,17 @@ function showHint() {
 
         // 상세 로그 출력
         console.log('🔍 힌트 - 잘못 배치된 조각:', incorrectPieces);
+        if (incorrectPieces.length > 0) {
+            console.log(`📏 스냅 임계값: ${incorrectPieces[0].snapThreshold.toFixed(1)}px (타일 크기의 1/3)`);
+        }
         incorrectPieces.forEach(info => {
             console.log(`조각 #${info.pieceVal}:`, {
                 현재위치: `(${info.current.left}, ${info.current.top})`,
                 올바른위치: `(${info.expected.left}, ${info.expected.top})`,
-                차이: `(${info.diff.left}, ${info.diff.top})`
+                위치차이: `(${info.diff.left}, ${info.diff.top})`,
+                '중심간_거리': `${info.distanceToCorrectZone.toFixed(1)}px`,
+                '스냅_임계값': `${info.snapThreshold.toFixed(1)}px`,
+                '스냅가능': info.canSnap ? '✅ 예 (놓으면 자동으로 맞춰짐)' : `❌ 아니오 (${(info.distanceToCorrectZone - info.snapThreshold).toFixed(1)}px 더 가까이 놓아야 함)`
             });
         });
     }
